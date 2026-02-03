@@ -43,7 +43,7 @@ export default function MealDetailsPage() {
       <div className="p-6 text-center text-destructive">Something Went Wrong</div>
     );
   }
-  console.log(data);
+
   function handleAddToCart() {
     if (!data.isAvailable) {
       toast.error("This meal is currently unavailable");

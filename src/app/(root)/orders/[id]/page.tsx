@@ -1,9 +1,11 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
+import { useUser } from "@/lib/user-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,7 +48,7 @@ type OrderDetails = {
   }[];
 };
 
-/* ---------------- API function ---------------- */
+/* ---------------- Fetcher ---------------- */
 async function fetchOrder(id: string): Promise<OrderDetails> {
   const res = await fetch(`${API_ORDERS}/${id}`, {
     credentials: "include",
@@ -58,14 +60,27 @@ async function fetchOrder(id: string): Promise<OrderDetails> {
 
 /* ---------------- Page ---------------- */
 export default function OrderDetailsPage() {
+  const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  const { user, isLoading: userLoading } = useUser();
+
+  /* -------- CUSTOMER GUARD -------- */
+  useEffect(() => {
+    if (userLoading) return;
+
+    if (!user || user.role !== "CUSTOMER") {
+      router.replace("/");
+    }
+  }, [user, userLoading, router]);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
     queryFn: () => fetchOrder(id),
+    enabled: !!id && user?.role === "CUSTOMER",
   });
 
-  if (isLoading) {
+  /* -------- Loading -------- */
+  if (userLoading || isLoading) {
     return (
       <div className="flex justify-center py-24">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -73,13 +88,18 @@ export default function OrderDetailsPage() {
     );
   }
 
+  /* -------- Block -------- */
+  if (!user || user.role !== "CUSTOMER") {
+    return null;
+  }
+
   if (!order) {
     return <div className="p-6">Order not found</div>;
   }
 
+  /* -------- UI -------- */
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold">Order Details</h1>
         <p className="text-sm text-muted-foreground">
@@ -89,7 +109,7 @@ export default function OrderDetailsPage() {
 
       {/* Status */}
       <Card>
-        <CardContent className="p-6 flex items-center justify-between">
+        <CardContent className="p-6 flex justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Status</p>
             <Badge className="mt-1">{order.status}</Badge>
@@ -101,13 +121,13 @@ export default function OrderDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Customer & Provider */}
+      {/* Customer / Provider */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Customer</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent>
             <p className="font-medium">{order.customer.name}</p>
             <p className="text-sm text-muted-foreground">
               {order.customer.email}
@@ -119,7 +139,7 @@ export default function OrderDetailsPage() {
           <CardHeader>
             <CardTitle>Provider</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent>
             <p className="font-medium">{order.provider.name}</p>
             {order.provider.address && (
               <p className="text-sm text-muted-foreground">
@@ -140,9 +160,7 @@ export default function OrderDetailsPage() {
         <CardHeader>
           <CardTitle>Delivery Address</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm">{order.deliveryAddress}</p>
-        </CardContent>
+        <CardContent>{order.deliveryAddress}</CardContent>
       </Card>
 
       {/* Items */}
@@ -160,11 +178,10 @@ export default function OrderDetailsPage() {
                 <TableHead className="text-right">Subtotal</TableHead>
               </TableRow>
             </TableHeader>
-
             <TableBody>
               {order.items.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="flex items-center gap-3">
+                  <TableCell className="flex gap-3 items-center">
                     <img
                       src={item.meal.imageUrl}
                       alt={item.meal.name}
@@ -193,7 +210,6 @@ export default function OrderDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Timestamps */}
       <div className="text-xs text-muted-foreground">
         Created: {new Date(order.createdAt).toLocaleString()} <br />
         Updated: {new Date(order.updatedAt).toLocaleString()}

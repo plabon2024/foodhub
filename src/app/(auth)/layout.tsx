@@ -1,4 +1,5 @@
-import React from "react";
+"use client"
+import React, { useEffect } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -6,9 +7,29 @@ import {
 } from "@/components/ui/resizable";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/lib/user-context";
 export default function layout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+    const router = useRouter();
+    const { user, isLoading } = useUser();
+  
+    useEffect(() => {
+      if (!isLoading && user) {
+        router.push("/"); // redirect if already logged in
+      }
+    }, [user, isLoading, router]);
+  
+    // While checking session → avoid flicker
+    if (isLoading) {
+      return null;
+    }
+  
+    // If logged in, page will redirect
+    if (user) {
+      return null;
+    }
   return (
     <main className="min-h-screen">
       <ResizablePanelGroup

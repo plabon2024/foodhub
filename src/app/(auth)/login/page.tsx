@@ -1,10 +1,18 @@
-import { LoginForm } from "@/components/login-form";
-import React from "react";
+"use client";
 
-export default function page() {
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import { LoginForm } from "@/components/login-form";
+import { useUser } from "@/lib/user-context";
+
+
+export default function Page() {
+
+
   return (
-    <div>
-      <LoginForm></LoginForm>
+    <div className="min-h-screen flex items-center justify-center">
+      <LoginForm />
     </div>
   );
 }

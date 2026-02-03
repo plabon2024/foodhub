@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
+import { useUser } from "@/lib/user-context";
 import {
   Table,
   TableBody,
@@ -42,17 +45,40 @@ async function fetchOrders(): Promise<Order[]> {
 
 /* ---------------- Page ---------------- */
 export default function OrdersPage() {
-  const { data: orders, isLoading, isError } = useQuery({
+  const router = useRouter();
+  const { user, isLoading: userLoading } = useUser();
+
+  /* -------- CUSTOMER GUARD -------- */
+  useEffect(() => {
+    if (userLoading) return;
+
+    if (!user || user.role !== "CUSTOMER") {
+      router.replace("/");
+    }
+  }, [user, userLoading, router]);
+
+  const {
+    data: orders,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["my-orders"],
     queryFn: fetchOrders,
+    enabled: user?.role === "CUSTOMER",
   });
 
-  if (isLoading) {
+  /* -------- Loading -------- */
+  if (userLoading || isLoading) {
     return (
       <div className="flex justify-center py-24">
         <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
+  }
+
+  /* -------- Block -------- */
+  if (!user || user.role !== "CUSTOMER") {
+    return null;
   }
 
   if (isError) {
@@ -63,9 +89,9 @@ export default function OrdersPage() {
     );
   }
 
+  /* -------- UI -------- */
   return (
     <div className="p-6 space-y-6 mx-auto max-w-5xl container">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold">My Orders</h1>
         <p className="text-sm text-muted-foreground">
@@ -73,7 +99,6 @@ export default function OrdersPage() {
         </p>
       </div>
 
-      {/* Empty State */}
       {!orders?.length ? (
         <div className="text-center text-muted-foreground py-20">
           You haven’t placed any orders yet.

@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { CartProvider } from "@/lib/cart/cart-context";
+import { UserProvider } from "@/lib/user-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +41,9 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             <Toaster richColors position="top-center" />
-            {children}
+            <CartProvider>
+              <UserProvider>{children}</UserProvider>
+            </CartProvider>
           </ReactQueryProvider>
         </ThemeProvider>
       </body>

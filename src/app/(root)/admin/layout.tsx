@@ -1,50 +1,38 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-
-const API = "http://localhost:5000/api";
-
-async function fetchMe() {
-  const res = await fetch(`${API}/auth/me`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Unauthorized");
-  return res.json();
-}
+import { useUser } from "@/lib/user-context";
 
 export default function Layout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
-
-  const { data: userData, isLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: fetchMe,
-  });
-
-  const user = userData?.data;
+  const { user, isLoading } = useUser();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "ADMIN")) {
-      router.push("/");
+    if (isLoading) return;
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+
+    if (user.role !== "ADMIN") {
+      router.replace("/");
+      return;
     }
   }, [user, isLoading, router]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
-  if (!user || user.role !== "ADMIN") {
+  if (isLoading || !user || user.role !== "ADMIN") {
     return null;
   }
 

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { useCart } from "@/lib/cart/cart-context";
+import { useUser } from "@/lib/user-context";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Loader2 } from "lucide-react";
 
 /* ---------------- API ---------------- */
 async function createOrder(payload: any) {
@@ -33,8 +36,18 @@ async function createOrder(payload: any) {
 /* ---------------- Page ---------------- */
 export default function CheckoutPage() {
   const router = useRouter();
+  const { user, isLoading: userLoading } = useUser();
   const { items, clear } = useCart();
   const [address, setAddress] = useState("");
+
+  /* -------- CUSTOMER GUARD -------- */
+  useEffect(() => {
+    if (userLoading) return;
+
+    if (!user || user.role !== "CUSTOMER") {
+      router.replace("/");
+    }
+  }, [user, userLoading, router]);
 
   const providerId = items[0]?.providerId;
 
@@ -53,6 +66,20 @@ export default function CheckoutPage() {
     onError: () => toast.error("Failed to place order"),
   });
 
+  /* -------- Loading -------- */
+  if (userLoading) {
+    return (
+      <div className="flex justify-center py-24">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
+  /* -------- Block -------- */
+  if (!user || user.role !== "CUSTOMER") {
+    return null;
+  }
+
   if (!items.length) {
     return (
       <div className="p-6 text-center text-muted-foreground">
@@ -61,11 +88,12 @@ export default function CheckoutPage() {
     );
   }
 
+  /* -------- UI -------- */
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <h1 className="text-xl font-semibold">Checkout</h1>
 
-      {/* -------- Products -------- */}
+      {/* Products */}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -101,19 +129,19 @@ export default function CheckoutPage() {
         </Table>
       </div>
 
-      {/* -------- Address -------- */}
+      {/* Address */}
       <Textarea
         placeholder="Delivery address"
         value={address}
         onChange={(e) => setAddress(e.target.value)}
       />
 
-      {/* -------- Payment -------- */}
+      {/* Payment */}
       <div className="text-sm text-muted-foreground">
         Payment Method: <b>Cash on Delivery</b>
       </div>
 
-      {/* -------- Place Order -------- */}
+      {/* Place Order */}
       <Button
         className="w-full"
         disabled={!address || mutation.isPending}

@@ -2,53 +2,45 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { Loader2 } from "lucide-react";
-
-const API = "http://localhost:5000/api";
-
-async function fetchMe() {
-  const res = await fetch(`${API}/auth/me`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Unauthorized");
-  return res.json();
-}
+import { useUser } from "@/lib/user-context";
 
 export default function Layout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
-
-  const { data: userData, isLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: fetchMe,
-  });
-
-  const user = userData?.data;
+  const { user, isLoading } = useUser();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "PROVIDER")) {
-      router.push("/");
+    if (isLoading) return;
+
+    // Not logged in
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    // Logged in but not provider
+    if (user.role !== "PROVIDER") {
+      router.replace("/");
     }
   }, [user, isLoading, router]);
 
-  if (isLoading) {
+  // Prevent flicker / unauthorized flash
+  if (isLoading || !user || user.role !== "PROVIDER") {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  if (!user || user.role !== "PROVIDER") {
-    return null;
-  }
-console.log(user)
   return (
     <SidebarProvider
       style={
@@ -59,7 +51,6 @@ console.log(user)
       }
     >
       <AppSidebar variant="inset" />
-
       <SidebarInset>
         <SiteHeader />
         {children}

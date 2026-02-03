@@ -1,58 +1,60 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useState } from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { signIn } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-    const formData = new FormData(e.currentTarget)
-    const email = String(formData.get("email"))
-    const password = String(formData.get("password"))
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email"));
+    const password = String(formData.get("password"));
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/auth/sign-in/email",
+      await signIn.email(
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      )
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data?.message || "Failed to login")
-      }
-
-      console.log("Login successful:", data)
-      // window.location.href = "/dashboard"
+          email,
+          password,
+        },
+        {
+          onRequest: () => {},
+          onResponse: () => {},
+          onError: (ctx) => {
+            toast.error(ctx.error.message);
+          },
+          onSuccess: () => {
+            toast.success("Login successful. Good to have you back.");
+            router.push("/");
+          },
+        },
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form
@@ -111,18 +113,7 @@ export function LoginForm({
           </Button>
         </Field>
 
-        <FieldSeparator>Or continue with</FieldSeparator>
-
         <Field>
-          <Button
-            variant="outline"
-            type="button"
-            disabled={isLoading}
-            className="w-full"
-          >
-            Login with GitHub
-          </Button>
-
           <FieldDescription className="text-center">
             Don&apos;t have an account?{" "}
             <a href="/register" className="underline underline-offset-4">
@@ -132,5 +123,5 @@ export function LoginForm({
         </Field>
       </FieldGroup>
     </form>
-  )
+  );
 }
