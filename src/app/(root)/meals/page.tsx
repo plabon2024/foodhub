@@ -1,106 +1,38 @@
 "use client";
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import Image from "next/image";
 
-import { useEffect, useState } from "react";
+const API = "http://localhost:5000/api/meals";
 
-type Meal = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl?: string;
-  category: { id: string; name: string };
-  provider: { id: string; name: string };
-};
+async function fetchMeals() {
+  const res = await fetch(API);
+  return (await res.json()).data.items;
+}
 
 export default function MealsPage() {
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // filters
-  const [q, setQ] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-
-  async function fetchMeals() {
-    setLoading(true);
-
-    const params = new URLSearchParams();
-    if (q) params.append("q", q);
-    if (minPrice) params.append("minPrice", minPrice);
-    if (maxPrice) params.append("maxPrice", maxPrice);
-
-    const res = await fetch(
-      `http://localhost:5000/meals?${params.toString()}`
-    );
-    const json = await res.json();
-
-    setMeals(json.data.items);
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    fetchMeals();
-  }, []);
+  const { data } = useQuery({ queryKey: ["meals"], queryFn: fetchMeals });
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Browse Meals</h1>
-
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-        <input
-          placeholder="Search meals..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-
-        <input
-          type="number"
-          placeholder="Min price"
-          value={minPrice}
-          onChange={(e) => setMinPrice(e.target.value)}
-        />
-
-        <input
-          type="number"
-          placeholder="Max price"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(e.target.value)}
-        />
-
-        <button onClick={fetchMeals}>Apply</button>
-      </div>
-
-      {/* Meals List */}
-      {loading ? (
-        <p>Loading...</p>
-      ) : meals.length === 0 ? (
-        <p>No meals found</p>
-      ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {meals.map((meal) => (
-            <li
-              key={meal.id}
-              style={{
-                border: "1px solid #ddd",
-                padding: 16,
-                marginBottom: 12,
-              }}
-            >
-              <h3>{meal.name}</h3>
-              <p>{meal.description}</p>
-              <p>
-                <strong>${meal.price}</strong>
-              </p>
-              <p>
-                {meal.category.name} · {meal.provider.name}
-              </p>
-
-              <a href={`/meals/${meal.id}`}>View details →</a>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto  container">
+      {data?.map((m: any) => (
+        <Link
+          key={m.id}
+          href={`/meals/${m.id}`}
+          className="border rounded-xl p-4"
+        >
+          <Image
+            src={m.imageUrl}
+            alt={m.name}
+            width={300}
+            height={200}
+            className="rounded"
+          />
+          <h3 className="font-semibold mt-2">{m.name}</h3>
+          <p className="text-sm text-muted-foreground">{m.category.name}</p>
+          <p className="font-bold">৳{m.price}</p>
+        </Link>
+      ))}
     </div>
   );
 }
