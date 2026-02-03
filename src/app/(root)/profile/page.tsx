@@ -17,7 +17,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import {
   User,
   Mail,
@@ -29,6 +28,7 @@ import {
   LogOut,
   Briefcase,
 } from "lucide-react";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
 const API = "http://localhost:5000/api";
 
@@ -104,9 +104,7 @@ export default function ProfilePage() {
             </Avatar>
 
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-bold mb-2 ">
-                {user.name}
-              </h1>
+              <h1 className="text-3xl font-bold mb-2 ">{user.name}</h1>
               <p className="text-gray-600 dark:text-gray-400 mb-3">
                 {user.email}
               </p>
@@ -115,10 +113,7 @@ export default function ProfilePage() {
                   <User className="w-3 h-3 mr-1" />
                   {user.role}
                 </Badge>
-                <Badge
-                  variant="outline"
-                  className="px-3 py-1 "
-                >
+                <Badge variant="outline" className="px-3 py-1 ">
                   {user.status}
                 </Badge>
                 {user.emailVerified && (
@@ -288,7 +283,6 @@ export default function ProfilePage() {
           disabled={updateMutation.isPending}
           size="sm"
           className="px-6 py-2  shadow-lg hover:shadow-xl transition-all"
-          
         >
           {updateMutation.isPending ? "Saving..." : "Save Changes"}
         </Button>
@@ -301,7 +295,7 @@ export default function ProfilePage() {
             onClick={() => applyMutation.mutate()}
             disabled={applyMutation.isPending}
             className="px-6 py-2 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 shadow-md hover:shadow-lg transition-all"
-             size="sm"
+            size="sm"
           >
             <Briefcase className="w-4 h-4 mr-2" />
             {applyMutation.isPending ? "Applying..." : "Apply for Provider"}
