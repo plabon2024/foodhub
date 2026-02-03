@@ -1,248 +1,239 @@
 "use client";
 
-import React, { useCallback, useEffect, useReducer, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Loader2, Trash2, Pencil } from "lucide-react";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type Category = {
+const API_BASE = "http://localhost:5000/api/admin/categories";
+const CATEGORY_API = "http://localhost:5000/api/categories";
+export type Category = {
   id: string;
   name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-type State = {
-  categories: Category[];
-  loading: boolean;
-  error: string | null;
-};
-
-type Action =
-  | { type: "FETCH_START" }
-  | { type: "FETCH_SUCCESS"; payload: Category[] }
-  | { type: "FETCH_ERROR"; payload: string };
-
-// ─── Reducer ─────────────────────────────────────────────────────────────────
-
-const initialState: State = {
-  categories: [],
-  loading: true,
-  error: null,
-};
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case "FETCH_START":
-      return { ...state, loading: true, error: null };
-    case "FETCH_SUCCESS":
-      return { categories: action.payload, loading: false, error: null };
-    case "FETCH_ERROR":
-      return { ...state, loading: false, error: action.payload };
-    default:
-      return state;
-  }
+async function fetchCategories(): Promise<Category[]> {
+  const res = await fetch(CATEGORY_API, { credentials: "include" });
+  if (!res.ok) throw new Error("FETCH_FAILED");
+  const json = await res.json();
+  return json.data;
 }
 
-// ─── API helpers ─────────────────────────────────────────────────────────────
-
-const API_URL = "http://localhost:5000/api/admin/categories";
-
-const base: RequestInit = { credentials: "include" };
-
-/**
- * Normalises the response: handles a bare array, { data: [] }, or { categories: [] }.
- * Logs a warning + returns [] if the shape is unrecognised.
- */
-function extractArray(json: unknown): Category[] {
-  if (Array.isArray(json)) return json;
-  if (json && typeof json === "object") {
-    const obj = json as Record<string, unknown>;
-    if (Array.isArray(obj.data)) return obj.data;
-    if (Array.isArray(obj.categories)) return obj.categories;
-  }
-  console.warn("Unexpected API response shape — expected an array:", json);
-  return [];
-}
-
-async function getCategories(): Promise<Category[]> {
-  const res = await fetch(API_URL, base);
-  if (!res.ok) throw new Error("Failed to fetch categories");
-  return extractArray(await res.json());
-}
-
-async function postCategory(name: string): Promise<void> {
-  const res = await fetch(API_URL, {
-    ...base,
+async function createCategory(data: {
+  name: string;
+  description?: string;
+}) {
+  const res = await fetch(API_BASE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
+    credentials: "include",
+    body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to create category");
+
+  if (!res.ok) throw new Error("CREATE_FAILED");
+  return res.json();
 }
 
-async function putCategory(id: string, name: string): Promise<void> {
-  const res = await fetch(`${API_URL}/${id}`, {
-    ...base,
+async function updateCategory({
+  id,
+  name,
+  description,
+}: {
+  id: string;
+  name?: string;
+  description?: string;
+}) {
+  const res = await fetch(`${API_BASE}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
+    credentials: "include",
+    body: JSON.stringify({ name, description }),
   });
-  if (!res.ok) throw new Error("Failed to update category");
+
+  if (!res.ok) throw new Error("UPDATE_FAILED");
+  return res.json();
 }
 
-async function removeCategory(id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/${id}`, {
-    ...base,
+async function deleteCategory(id: string) {
+  const res = await fetch(`${API_BASE}/${id}`, {
     method: "DELETE",
+    credentials: "include",
   });
-  if (!res.ok) throw new Error("Failed to delete category");
+
+  if (!res.ok) throw new Error("DELETE_FAILED");
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+export default function AdminCategoriesPage() {
+  const queryClient = useQueryClient();
 
-export default function CategoriesPage() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [editing, setEditing] = useState<Category | null>(null);
   const [name, setName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [description, setDescription] = useState("");
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
-  const load = useCallback(async () => {
-    dispatch({ type: "FETCH_START" });
-    try {
-      const data = await getCategories();
-      dispatch({ type: "FETCH_SUCCESS", payload: data });
-    } catch (err: unknown) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload: err instanceof Error ? err.message : "Unknown error",
-      });
-    }
-  }, []);
+  const { data: categories, isLoading } = useQuery({
+    queryKey: ["admin-categories"],
+    queryFn: fetchCategories,
+  });
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleSubmit = async () => {
-    const trimmed = name.trim();
-    if (!trimmed || pending) return;
-
-    setPending(true);
-    try {
-      if (editingId) {
-        await putCategory(editingId, trimmed);
-        setEditingId(null);
-      } else {
-        await postCategory(trimmed);
-      }
+  const createMutation = useMutation({
+    mutationFn: createCategory,
+    onSuccess: () => {
+      toast.success("Category created");
       setName("");
-      await load(); // refetch after mutation
-    } catch (err: unknown) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload: err instanceof Error ? err.message : "Unknown error",
-      });
-    } finally {
-      setPending(false);
+      setDescription("");
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+    onError: () => toast.error("Failed to create category"),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateCategory,
+    onSuccess: () => {
+      toast.success("Category updated");
+      setEditing(null);
+      setName("");
+      setDescription("");
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+    onError: () => toast.error("Failed to update category"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteCategory,
+    onSuccess: () => {
+      toast.success("Category deleted");
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+    onError: () => toast.error("Failed to delete category"),
+  });
+
+  function submitForm() {
+    if (!name.trim()) {
+      toast.error("Name is required");
+      return;
     }
-  };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this category?")) return;
-    setPending(true);
-    try {
-      await removeCategory(id);
-      await load();
-    } catch (err: unknown) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload: err instanceof Error ? err.message : "Unknown error",
+    if (editing) {
+      updateMutation.mutate({
+        id: editing.id,
+        name,
+        description,
       });
-    } finally {
-      setPending(false);
+    } else {
+      createMutation.mutate({ name, description });
     }
-  };
+  }
 
-  const handleEdit = (cat: Category) => {
-    setEditingId(cat.id);
-    setName(cat.name);
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setName("");
-  };
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-2xl">
-      <h1 className="text-2xl font-semibold mb-4">Manage Categories</h1>
+    <div className="p-6 space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold">Admin · Categories</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage meal categories
+        </p>
+      </div>
 
-      {/* Error banner */}
-      {state.error && (
-        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">
-          {state.error}
-        </div>
-      )}
-
-      {/* Create / Update form */}
-      <div className="flex gap-2 mb-6">
-        <input
-          className="border px-3 py-2 rounded w-full"
+      {/* Form */}
+      <div className="max-w-xl space-y-4 rounded-lg border p-4">
+        <h2 className="font-medium">
+          {editing ? "Edit Category" : "Create Category"}
+        </h2>
+        <Input
           placeholder="Category name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          disabled={pending}
         />
-        <button
-          onClick={handleSubmit}
-          disabled={!name.trim() || pending}
-          className="bg-blue-600 text-white px-4 rounded disabled:opacity-40"
-        >
-          {editingId ? "Update" : "Add"}
-        </button>
-        {editingId && (
-          <button
-            onClick={handleCancel}
-            className="bg-gray-200 text-gray-700 px-4 rounded"
-          >
-            Cancel
-          </button>
-        )}
+        <Textarea
+          placeholder="Description (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <div className="flex gap-2">
+          <Button onClick={submitForm} disabled={createMutation.isPending || updateMutation.isPending}>
+            {(createMutation.isPending || updateMutation.isPending) && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {editing ? "Update" : "Create"}
+          </Button>
+          {editing && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditing(null);
+                setName("");
+                setDescription("");
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* List */}
-      {state.loading ? (
-        <p className="text-gray-500">Loading…</p>
-      ) : state.categories.length === 0 ? (
-        <p className="text-gray-400 text-sm">No categories yet.</p>
+      {/* Table */}
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
       ) : (
-        <ul className="space-y-2">
-          {state.categories.map((cat) => (
-            <li
-              key={cat.id}
-              className="flex justify-between items-center border p-3 rounded"
-            >
-              <span>{cat.name}</span>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleEdit(cat)}
-                  className="text-blue-600 hover:underline text-sm"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(cat.id)}
-                  disabled={pending}
-                  className="text-red-600 hover:underline text-sm disabled:opacity-40"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categories?.map((cat) => (
+              <TableRow key={cat.id}>
+                <TableCell>{cat.name}</TableCell>
+                <TableCell className="max-w-md truncate">
+                  {cat.description || "—"}
+                </TableCell>
+                <TableCell>
+                  {new Date(cat.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      setEditing(cat);
+                      setName(cat.name);
+                      setDescription(cat.description || "");
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    disabled={deleteMutation.isPending}
+                    onClick={() => deleteMutation.mutate(cat.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );
