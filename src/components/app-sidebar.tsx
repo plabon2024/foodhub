@@ -1,27 +1,21 @@
 "use client"
 
 import * as React from "react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
 import {
-  IconCamera,
-  IconChartBar,
   IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
   IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
   IconUsers,
+  IconChartBar,
+  IconFolder,
+  IconUser
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/components/nav-documents"
+import { useUser } from "@/lib/user-context"
+
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -29,152 +23,116 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
+import { Loader2 } from "lucide-react"
+import { FoodHubLogo } from "./foodhub-logo"
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+/* -----------------------------
+   MENU CONFIG (ROLE BASED)
+--------------------------------*/
+
+const PROVIDER_MENU = [
+  {
+    title: "Dashboard",
+    url: "/provider/dashboard",
+    icon: IconDashboard,
+  },
+  {
+    title: "Menu",
+    url: "/provider/menu",
+    icon: IconFolder,
+  },
+  {
+    title: "Orders",
+    url: "/provider/orders",
+    icon: IconListDetails,
+  },
+  {
+    title: "Profile",
+    url: "/provider/profile",
+    icon: IconUser,
+  },
+]
+
+const ADMIN_MENU = [
+  {
+    title: "Dashboard",
+    url: "/admin",
+    icon: IconDashboard,
+  },
+  {
+    title: "Users",
+    url: "/admin/users",
+    icon: IconUsers,
+  },
+  {
+    title: "Orders",
+    url: "/admin/orders",
+    icon: IconListDetails,
+  },
+  {
+    title: "Categories",
+    url: "/admin/categories",
+    icon: IconFolder,
+  },
+]
+
+/* -----------------------------
+   SIDEBAR
+--------------------------------*/
+
+export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const { user, isPending } = useUser()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isPending) return
+
+    if (!user) {
+      router.push("/")
+      return
+    }
+
+    if (user.role !== "PROVIDER" && user.role !== "ADMIN") {
+      router.push("/")
+    }
+  }, [user, isPending, router])
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!user) return null
+
+  const navItems =
+    user.role === "ADMIN" ? ADMIN_MENU : PROVIDER_MENU
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+         <FoodHubLogo></FoodHubLogo>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navItems} />
       </SidebarContent>
+
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: user.name,
+            email: user.email,
+            avatar: user.image ?? "",
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   )

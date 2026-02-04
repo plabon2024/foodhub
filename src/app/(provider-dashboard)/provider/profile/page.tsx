@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 
+import { useUser } from "@/lib/user-context";
 import {
   Briefcase,
   CheckCircle2,
@@ -30,10 +31,10 @@ import {
   MapPin,
   Phone
 } from "lucide-react";
-import { useUser } from "@/lib/user-context";
 
 /* ---------------- API ---------------- */
-  const baseurl = process.env.AUTH_URL;
+  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API = `${baseurl}/api`;
 

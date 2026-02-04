@@ -1,16 +1,17 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import Image from "next/image";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API_PROVIDERS = `${baseurl}/api/providers`;
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-import { useUser } from "@/lib/user-context";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -15,10 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/lib/user-context";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API_ORDERS = `${baseurl}/api/orders`;
 

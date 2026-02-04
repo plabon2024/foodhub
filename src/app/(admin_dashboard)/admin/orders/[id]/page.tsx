@@ -1,14 +1,15 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API_BASE = `${baseurl}/api/orders`;
 

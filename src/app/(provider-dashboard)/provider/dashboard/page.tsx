@@ -3,8 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/table";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API_STATS = `${baseurl}/api/stats`;
 const API_ORDERS = `${baseurl}/api/orders`;

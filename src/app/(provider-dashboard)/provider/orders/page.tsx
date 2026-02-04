@@ -7,7 +7,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-  const baseurl = process.env.AUTH_URL;
+  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 
 const API_LIST = `${baseurl}/api/orders`;

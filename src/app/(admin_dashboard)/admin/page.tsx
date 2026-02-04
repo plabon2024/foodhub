@@ -1,14 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Users, Store, Utensils, ShoppingCart, DollarSign } from "lucide-react";
 import { useUser } from "@/lib/user-context";
+import { useQuery } from "@tanstack/react-query";
+import { DollarSign, Loader2, ShoppingCart, Store, Users, Utensils } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API_URL = `${baseurl}/api/stats`;
 

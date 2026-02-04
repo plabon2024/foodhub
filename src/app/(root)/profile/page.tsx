@@ -30,7 +30,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API = `${baseurl}/api`;
 

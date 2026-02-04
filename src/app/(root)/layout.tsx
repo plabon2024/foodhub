@@ -7,12 +7,8 @@ export default function layout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div>
-
       <Navbar></Navbar>
-      <div className="py-20">
 
-      <Navbar2></Navbar2>
-      </div>
       <div className="py-16">{children}</div>
     </div>
   );

@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useCart } from "@/lib/cart/cart-context";
 import { useUser } from "@/lib/user-context";
 
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,11 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 
 /* ---------------- API ---------------- */
 async function createOrder(payload: any) {
-  const baseurl = process.env.AUTH_URL;
+  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
   const res = await fetch(`${baseurl}/api/orders`, {
     method: "POST",

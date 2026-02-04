@@ -1,19 +1,20 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, ArrowLeft, Loader2, ShoppingCart } from "lucide-react";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, ShoppingCart, AlertCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCart } from "@/lib/cart/cart-context";
 
 /* ---------------- Fetcher ---------------- */
 async function fetchMeal(id: string) {
-  const baseurl = process.env.AUTH_URL;
+  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
   const res = await fetch(`${baseurl}/api/meals/${id}`);
 

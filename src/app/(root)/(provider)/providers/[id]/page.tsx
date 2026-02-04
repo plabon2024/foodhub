@@ -1,19 +1,20 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import { Loader2, MapPin, Phone, ShoppingCart } from "lucide-react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useCart } from "@/lib/cart/cart-context";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 
 const API_PROVIDERS = `${baseurl}/api/providers`;
 

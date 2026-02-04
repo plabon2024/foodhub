@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import Image from "next/image";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -16,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -24,15 +24,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Trash2, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 
 import UploadImage from "@/components/imageupload/UploadImage";
 import { Label } from "@/components/ui/label";
 
 /* ---------------- API ---------------- */
 
-const baseurl = process.env.AUTH_URL;
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
+;
 const API_PROVIDER_MEALS = `${baseurl}/api/provider/meals`;
 const API_MEALS = `${baseurl}/api/meals`;
 const API_CATEGORIES = `${baseurl}/api/categories`;
