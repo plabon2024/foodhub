@@ -1,7 +1,8 @@
 import { AdminOrder } from "@/types/order";
 
 export async function fetchAdminOrders(): Promise<AdminOrder[]> {
-  const res = await fetch("http://localhost:5000/api/orders", {
+  const baseurl = process.env.AUTH_URL;
+  const res = await fetch(`${baseurl}/api/orders`, {
     credentials: "include",
   });
 

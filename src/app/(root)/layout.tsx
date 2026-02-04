@@ -1,3 +1,4 @@
+import Navbar2 from "@/components/shared/navbar/Navbar";
 import Navbar from "@/components/shared/Navbar1/Navbar";
 import React from "react";
 
@@ -6,11 +7,13 @@ export default function layout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div>
-      <Navbar></Navbar>
-      <div className="py-16">
 
-      {children}
+      <Navbar></Navbar>
+      <div className="py-20">
+
+      <Navbar2></Navbar2>
       </div>
+      <div className="py-16">{children}</div>
     </div>
   );
 }

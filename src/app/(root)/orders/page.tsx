@@ -18,7 +18,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 /* ---------------- API ---------------- */
-const API_ORDERS = "http://localhost:5000/api/orders";
+const baseurl = process.env.AUTH_URL;
+
+const API_ORDERS = `${baseurl}/api/orders`;
+
 
 /* ---------------- Types ---------------- */
 type Order = {
@@ -45,17 +48,28 @@ async function fetchOrders(): Promise<Order[]> {
 
 /* ---------------- Page ---------------- */
 export default function OrdersPage() {
+  const { user, isPending } = useUser();
   const router = useRouter();
-  const { user, isLoading: userLoading } = useUser();
-
-  /* -------- CUSTOMER GUARD -------- */
   useEffect(() => {
-    if (userLoading) return;
+    if (isPending) return;
 
     if (!user || user.role !== "CUSTOMER") {
-      router.replace("/");
+      router.push("/");
     }
-  }, [user, userLoading, router]);
+  }, [user, isPending, router]);
+
+ 
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "CUSTOMER") {
+    return null;
+  }
 
   const {
     data: orders,
@@ -67,19 +81,9 @@ export default function OrdersPage() {
     enabled: user?.role === "CUSTOMER",
   });
 
-  /* -------- Loading -------- */
-  if (userLoading || isLoading) {
-    return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  }
 
-  /* -------- Block -------- */
-  if (!user || user.role !== "CUSTOMER") {
-    return null;
-  }
+
+
 
   if (isError) {
     return (

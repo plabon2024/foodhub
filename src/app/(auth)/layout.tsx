@@ -17,14 +17,16 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, isLoading: userLoading } = useUser();
-  useEffect(() => {
-    if (userLoading) return;
+  const { user } = useUser();
 
+  useEffect(() => {
     if (user) {
+      
       router.push("/");
     }
-  }, [user, userLoading, router]);
+  }, [user, router]);
+
+  if (user) return null;
   return (
     <main className="min-h-screen">
       <ResizablePanelGroup direction="horizontal" className="min-h-screen">

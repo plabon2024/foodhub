@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth-client";
+import { useUser } from "@/lib/user-context";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 export const SignOutButton = () => {
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
+  const{refetch,user}=useUser();
 
   async function handleClick() {
     await signOut({
@@ -24,7 +26,9 @@ export const SignOutButton = () => {
         },
         onSuccess: () => {
           toast.success("You’ve logged out. See you soon!");
+          refetch()
           router.push("/login");
+
         },
       },
     });

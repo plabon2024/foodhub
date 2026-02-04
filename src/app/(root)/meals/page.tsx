@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 
-const API = "http://localhost:5000/api/meals";
+const baseurl = process.env.AUTH_URL;
+
+const API = `${baseurl}/api/meals`;
 const LIMIT = 6;
 
 /* ---------------- Fetcher ---------------- */

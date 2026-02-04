@@ -7,9 +7,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+  const baseurl = process.env.AUTH_URL;
 
-const API_LIST = "http://localhost:5000/api/orders";
-const API_UPDATE = "http://localhost:5000/api/provider/orders";
+
+const API_LIST = `${baseurl}/api/orders`;
+const API_UPDATE = `${baseurl}/api/provider/orders`;
 
 export type ProviderOrder = {
   id: string;

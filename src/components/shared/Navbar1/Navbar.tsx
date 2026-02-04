@@ -6,15 +6,12 @@ import { useTheme } from "next-themes";
 import { MenuIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-
-
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-
 import {
   Sheet,
   SheetContent,
@@ -24,21 +21,24 @@ import {
 } from "@/components/ui/sheet";
 
 import { useUser } from "@/lib/user-context";
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ModeToggle } from "../navbar/ModeToggle";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
+/* ---------------- Component ---------------- */
 export default function Navbar() {
-  const { user, isLoading } = useUser();
   const { theme } = useTheme();
+  const { user, isPending, setUser } = useUser();
 
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
 
+  /* ---------------- Mount ---------------- */
   useEffect(() => setMounted(true), []);
 
+  /* ---------------- Hide on Scroll ---------------- */
   useEffect(() => {
-    const controlNavbar = () => {
+    const onScroll = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 80) {
         setHidden(true);
       } else {
@@ -47,13 +47,13 @@ export default function Navbar() {
       setLastScrollY(window.scrollY);
     };
 
-    window.addEventListener("scroll", controlNavbar);
-    return () => window.removeEventListener("scroll", controlNavbar);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, [lastScrollY]);
 
-  if (!mounted) return null;
+  if (!mounted || isPending) return null; // ✅ prevent flicker
 
-  /* ---------------- Menus ---------------- */
+  /* ---------------- Links ---------------- */
   const commonLinks = [
     { href: "/", label: "Home" },
     { href: "/meals", label: "Meals" },
@@ -81,21 +81,19 @@ export default function Navbar() {
     { href: "/admin/categories", label: "Categories" },
   ];
 
-  function renderLinks(isMobile = false) {
-    const base = commonLinks;
-    const roleLinks =
-      user?.role === "CUSTOMER"
-        ? customerLinks
-        : user?.role === "PROVIDER"
-        ? providerLinks
-        : user?.role === "ADMIN"
-        ? adminLinks
-        : [];
+  function roleLinks() {
+    if (!user) return [];
+    if (user.role === "CUSTOMER") return customerLinks;
+    if (user.role === "PROVIDER") return providerLinks;
+    if (user.role === "ADMIN") return adminLinks;
+    return [];
+  }
 
-    const links = [...base, ...roleLinks];
+  function renderLinks(mobile = false) {
+    const links = [...commonLinks, ...roleLinks()];
 
     return links.map((l) =>
-      isMobile ? (
+      mobile ? (
         <Link
           key={l.href}
           href={l.href}
@@ -107,15 +105,16 @@ export default function Navbar() {
         <NavigationMenuItem key={l.href}>
           <NavigationMenuLink
             href={l.href}
-            className="px-4 py-2 rounded-lg hover:bg-muted transition font-semibold text-sm"
+            className="px-4 py-2 rounded-lg hover:bg-muted font-semibold text-sm"
           >
             {l.label}
           </NavigationMenuLink>
         </NavigationMenuItem>
-      )
+      ),
     );
   }
 
+  /* ---------------- UI ---------------- */
   return (
     <section
       className={`fixed top-0 z-50 w-full backdrop-blur-xl transition-transform duration-300
@@ -129,9 +128,7 @@ export default function Navbar() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">M</span>
             </div>
-            <span className="font-bold text-lg hidden sm:inline">
-              MealBD
-            </span>
+            <span className="hidden sm:inline font-bold text-lg">MealBD</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -143,20 +140,20 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-3">
             <ModeToggle />
 
-            {!isLoading && !user && (
+            {!user ? (
               <>
                 <Link href="/login">Login</Link>
                 <Button asChild>
                   <Link href="/register">Register</Link>
                 </Button>
               </>
+            ) : (
+             <SignOutButton></SignOutButton>
             )}
-
-            {!isLoading && user && <SignOutButton />}
           </div>
 
           {/* Mobile */}
-          <div className="lg:hidden flex items-center gap-2  ">
+          <div className="lg:hidden flex items-center gap-2">
             <ModeToggle />
 
             <Sheet>
@@ -171,17 +168,17 @@ export default function Navbar() {
                   <SheetTitle>MealBD</SheetTitle>
                 </SheetHeader>
 
-                <div className="flex flex-col gap-4  p-4">
+                <div className="flex flex-col gap-4 p-4">
                   {renderLinks(true)}
 
-                  <div className="pt-4 border-t flex flex-col gap-2">
+                  <div className="pt-4 border-t">
                     {!user ? (
                       <>
                         <Link href="/login">Login</Link>
                         <Link href="/register">Register</Link>
                       </>
                     ) : (
-                      <SignOutButton />
+                      <SignOutButton></SignOutButton>
                     )}
                   </div>
                 </div>

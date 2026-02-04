@@ -15,8 +15,11 @@ import {
 } from "@/components/ui/table";
 
 /* ---------------- API ---------------- */
-const API_STATS = "http://localhost:5000/api/stats";
-const API_ORDERS = "http://localhost:5000/api/orders";
+const baseurl = process.env.AUTH_URL;
+
+const API_STATS = `${baseurl}/api/stats`;
+const API_ORDERS = `${baseurl}/api/orders`;
+
 
 /* ---------------- Types ---------------- */
 type StatsResponse = {

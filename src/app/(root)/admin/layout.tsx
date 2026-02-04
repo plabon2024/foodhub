@@ -7,32 +7,33 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useUser } from "@/lib/user-context";
+import { Loader2 } from "lucide-react";
 
 export default function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, isPending } = useUser();
   const router = useRouter();
-  const { user, isLoading } = useUser();
-
   useEffect(() => {
-    if (isLoading) return;
+    if (isPending) return;
 
-    if (!user) {
-      router.replace("/login");
-      return;
+    if (!user || user.role !== "ADMIN") {
+      router.push("/");
     }
+  }, [user, isPending, router]);
 
+ 
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
-    if (user.role !== "ADMIN") {
-      router.replace("/");
-      return;
-    }
-  }, [user, isLoading, router]);
-
-
-  if (isLoading || !user || user.role !== "ADMIN") {
+  if (!user || user.role !== "ADMIN") {
     return null;
   }
 

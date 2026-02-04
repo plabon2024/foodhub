@@ -14,7 +14,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle } from "lucide-react";
 
-const API_BASE = "http://localhost:5000/api/admin/provider-applications";
+const baseurl = process.env.AUTH_URL;
+
+const API_BASE = `${baseurl}/api/admin/provider-applications`;
 
 export type ProviderApplication = {
   id: string;

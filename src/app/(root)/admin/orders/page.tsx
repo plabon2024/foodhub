@@ -8,7 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = "http://localhost:5000/api/orders";
+const baseurl = process.env.AUTH_URL;
+
+const API_URL = `${baseurl}/api/orders`;
+
 
 export type Order = {
   id: string;

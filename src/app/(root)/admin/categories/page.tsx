@@ -16,8 +16,11 @@ import {
 } from "@/components/ui/table";
 import { Loader2, Trash2, Pencil } from "lucide-react";
 
-const API_BASE = "http://localhost:5000/api/admin/categories";
-const CATEGORY_API = "http://localhost:5000/api/categories";
+const baseurl = process.env.AUTH_URL;
+
+const API_BASE = `${baseurl}/api/admin/categories`;
+const CATEGORY_API = `${baseurl}/api/categories`;
+
 export type Category = {
   id: string;
   name: string;

@@ -15,7 +15,10 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import AdminProviderApplicationsPage from "./Application";
 
-const API_BASE = "http://localhost:5000/api/admin/users";
+const baseurl = process.env.AUTH_URL;
+
+const API_BASE = `${baseurl}/api/admin/users`;
+
 
 export type User = {
   id: string;

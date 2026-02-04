@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 /* ---------------- API ---------------- */
-const API_PROVIDERS = "http://localhost:5000/api/providers";
+const baseurl = process.env.AUTH_URL;
+
+const API_PROVIDERS = `${baseurl}/api/providers`;
 
 /* ---------------- Types ---------------- */
 type Provider = {

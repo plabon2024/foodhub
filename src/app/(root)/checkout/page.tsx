@@ -22,7 +22,9 @@ import { Loader2 } from "lucide-react";
 
 /* ---------------- API ---------------- */
 async function createOrder(payload: any) {
-  const res = await fetch("http://localhost:5000/api/orders", {
+  const baseurl = process.env.AUTH_URL;
+
+  const res = await fetch(`${baseurl}/api/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -35,25 +37,36 @@ async function createOrder(payload: any) {
 
 /* ---------------- Page ---------------- */
 export default function CheckoutPage() {
+  const { user, isPending } = useUser();
   const router = useRouter();
-  const { user, isLoading: userLoading } = useUser();
-  const { items, clear } = useCart();
-  const [address, setAddress] = useState("");
-
-  /* -------- CUSTOMER GUARD -------- */
   useEffect(() => {
-    if (userLoading) return;
+    if (isPending) return;
 
     if (!user || user.role !== "CUSTOMER") {
-      router.replace("/");
+      router.push("/");
     }
-  }, [user, userLoading, router]);
+  }, [user, isPending, router]);
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "CUSTOMER") {
+    return null;
+  }
+
+  const { items, clear } = useCart();
+  const [address, setAddress] = useState("");
 
   const providerId = items[0]?.providerId;
 
   const totalAmount = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
+    0,
   );
 
   const mutation = useMutation({

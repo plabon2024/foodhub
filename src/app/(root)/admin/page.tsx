@@ -4,8 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Users, Store, Utensils, ShoppingCart, DollarSign } from "lucide-react";
+import { useUser } from "@/lib/user-context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-const API_URL = "http://localhost:5000/api/stats";
+const baseurl = process.env.AUTH_URL;
+
+const API_URL = `${baseurl}/api/stats`;
+
 
 export type AdminStats = {
   role: "ADMIN";
@@ -68,6 +74,29 @@ export default function AdminDashboardPage() {
   if (isError) {
     toast.error("Failed to load admin dashboard stats");
   }
+  const { user, isPending } = useUser();
+  const router = useRouter();
+  useEffect(() => {
+    if (isPending) return;
+
+    if (!user || user.role !== "ADMIN") {
+      router.push("/");
+    }
+  }, [user, isPending, router]);
+
+ 
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "ADMIN") {
+    return null;
+  }
+
 
   return (
     <div className="p-6 space-y-8">

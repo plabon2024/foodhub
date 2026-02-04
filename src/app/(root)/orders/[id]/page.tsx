@@ -18,7 +18,10 @@ import {
 } from "@/components/ui/table";
 
 /* ---------------- API ---------------- */
-const API_ORDERS = "http://localhost:5000/api/orders";
+const baseurl = process.env.AUTH_URL;
+
+const API_ORDERS = `${baseurl}/api/orders`;
+
 
 /* ---------------- Types ---------------- */
 type OrderDetails = {
@@ -62,16 +65,27 @@ async function fetchOrder(id: string): Promise<OrderDetails> {
 export default function OrderDetailsPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
-  const { user, isLoading: userLoading } = useUser();
+  const { user, isPending } = useUser();
 
-  /* -------- CUSTOMER GUARD -------- */
   useEffect(() => {
-    if (userLoading) return;
+    if (isPending) return;
 
     if (!user || user.role !== "CUSTOMER") {
-      router.replace("/");
+      router.push("/");
     }
-  }, [user, userLoading, router]);
+  }, [user, isPending, router]);
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "CUSTOMER") {
+    return null;
+  }
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
@@ -79,19 +93,6 @@ export default function OrderDetailsPage() {
     enabled: !!id && user?.role === "CUSTOMER",
   });
 
-  /* -------- Loading -------- */
-  if (userLoading || isLoading) {
-    return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  }
-
-  /* -------- Block -------- */
-  if (!user || user.role !== "CUSTOMER") {
-    return null;
-  }
 
   if (!order) {
     return <div className="p-6">Order not found</div>;

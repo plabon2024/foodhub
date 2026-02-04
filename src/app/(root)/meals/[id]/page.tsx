@@ -13,7 +13,10 @@ import { useCart } from "@/lib/cart/cart-context";
 
 /* ---------------- Fetcher ---------------- */
 async function fetchMeal(id: string) {
-  const res = await fetch(`http://localhost:5000/api/meals/${id}`);
+  const baseurl = process.env.AUTH_URL;
+
+  const res = await fetch(`${baseurl}/api/meals/${id}`);
+
   if (!res.ok) throw new Error("FETCH_MEAL_FAILED");
   const json = await res.json();
   return json.data;
@@ -70,7 +73,7 @@ export default function MealDetailsPage() {
       quantity: 1,
       providerId: data.provider.id,
     });
-    
+
     toast.success("Added to cart");
   }
 
@@ -102,7 +105,10 @@ export default function MealDetailsPage() {
                 />
                 {!data.isAvailable && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                    <Badge variant="destructive" className="text-base px-4 py-2">
+                    <Badge
+                      variant="destructive"
+                      className="text-base px-4 py-2"
+                    >
                       Currently Unavailable
                     </Badge>
                   </div>
@@ -186,7 +192,9 @@ export default function MealDetailsPage() {
       {/* Additional Info Section (Optional) */}
       {data.provider.description && (
         <Card className="mt-12 p-6">
-          <h2 className="mb-3 text-lg font-semibold">About {data.provider.name}</h2>
+          <h2 className="mb-3 text-lg font-semibold">
+            About {data.provider.name}
+          </h2>
           <p className="text-muted-foreground">{data.provider.description}</p>
         </Card>
       )}

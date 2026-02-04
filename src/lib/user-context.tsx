@@ -1,57 +1,65 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
-import { useQuery } from "@tanstack/react-query";
-
-const API = "http://localhost:5000/api";
-
-async function fetchMe() {
-  const res = await fetch(`${API}/auth/me`, {
-    credentials: "include",
-  });
-
-  if (!res.ok) throw new Error("UNAUTHORIZED");
-  return res.json();
-}
+import React, { createContext, useContext, useState, useTransition } from "react";
+import { getUser } from "@/actions/user.action";
 
 /* ---------------- Types ---------------- */
+export type UserRole = "ADMIN" | "CUSTOMER" | "PROVIDER";
+
+export type ProviderProfile = {
+  description?: string | null;
+  address?: string | null;
+  phone?: string | null;
+};
+
 export type User = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "CUSTOMER" | "PROVIDER";
-  status: string;
   emailVerified: boolean;
+  image: string | null;
+  role: UserRole;
+  status: "ACTIVE" | "SUSPENDED";
   createdAt: string;
-  providerProfile?: {
-    description?: string;
-    address?: string;
-    phone?: string;
-  };
+  updatedAt: string;
+  providerProfile?: ProviderProfile;
 };
 
 type UserContextType = {
   user: User | null;
-  isLoading: boolean;
-  refetch: () => void;
+  setUser: (user: User | null) => void;
+  refetch: () => Promise<void>;
+  isPending: boolean;
 };
 
 /* ---------------- Context ---------------- */
 const UserContext = createContext<UserContextType | null>(null);
 
 /* ---------------- Provider ---------------- */
-export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["me"],
-    queryFn: fetchMe,
-  });
+export function UserProvider({
+  children,
+  initialUser,
+}: {
+  children: React.ReactNode;
+  initialUser: User | null;
+}) {
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [isPending, startTransition] = useTransition();
+
+  async function refetch() {
+    startTransition(async () => {
+      const res = await getUser();
+      setUser(res.data);
+    });
+  }
 
   return (
     <UserContext.Provider
       value={{
-        user: data?.data ?? null,
-        isLoading,
+        user,
+        setUser,
         refetch,
+        isPending,
       }}
     >
       {children}
@@ -62,6 +70,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 /* ---------------- Hook ---------------- */
 export function useUser() {
   const ctx = useContext(UserContext);
-  if (!ctx) throw new Error("useUser must be used inside UserProvider");
+  if (!ctx) {
+    throw new Error("useUser must be used inside UserProvider");
+  }
   return ctx;
 }

@@ -27,11 +27,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Trash2, Pencil } from "lucide-react";
 
-/* ---------------- API ---------------- */
-const API_PROVIDER_MEALS = "http://localhost:5000/api/provider/meals";
-const API_MEALS = "http://localhost:5000/api/meals";
-const API_CATEGORIES = "http://localhost:5000/api/categories";
+import UploadImage from "@/components/imageupload/UploadImage";
+import { Label } from "@/components/ui/label";
 
+/* ---------------- API ---------------- */
+
+const baseurl = process.env.AUTH_URL;
+const API_PROVIDER_MEALS = `${baseurl}/api/provider/meals`;
+const API_MEALS = `${baseurl}/api/meals`;
+const API_CATEGORIES = `${baseurl}/api/categories`;
 /* ---------------- Types ---------------- */
 type Category = {
   id: string;
@@ -198,9 +202,7 @@ export default function ProviderMenuPage() {
           <Textarea
             placeholder="Description"
             value={form.description || ""}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
           <Input
@@ -212,13 +214,21 @@ export default function ProviderMenuPage() {
             }
           />
 
-          <Input
-            placeholder="Image URL"
-            value={form.imageUrl || ""}
-            onChange={(e) =>
-              setForm({ ...form, imageUrl: e.target.value })
+          <Label>Product Image</Label>
+
+          <UploadImage
+            onUpload={(url: string) =>
+              setForm((prev) => ({ ...prev, imageUrl: url }))
             }
           />
+
+          {form.imageUrl && (
+            <img
+              src={form.imageUrl}
+              alt="Preview"
+              className="mt-2 w-32 h-32 object-cover rounded-md border"
+            />
+          )}
 
           <Select
             value={form.categoryId}

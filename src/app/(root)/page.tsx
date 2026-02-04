@@ -7,10 +7,12 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/lib/user-context";
 
 /* ---------------- API ---------------- */
 const API_CATEGORIES = "http://localhost:5000/api/categories";
-const API_FEATURED = "http://localhost:5000/api/meals?featured=true&available=true";
+const API_FEATURED =
+  "http://localhost:5000/api/meals?featured=true&available=true";
 
 /* ---------------- Types ---------------- */
 type Category = {
@@ -59,9 +61,11 @@ export default function HomePage() {
     queryFn: fetchFeaturedMeals,
   });
 
+ 
+
   return (
     <div className="py-16">
-      {/* ---------- HERO ---------- */}
+  
       <section className="bg-muted">
         <div className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-10 items-center">
           <div className="space-y-6">

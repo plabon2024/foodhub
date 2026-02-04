@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
+import { useUser } from "@/lib/user-context";
+
 import { cn } from "@/lib/utils";
 
 import * as React from "react";
@@ -20,12 +22,12 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
+   const { refetch, user } = useUser();
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
+ 
     const formData = new FormData(e.currentTarget);
     const email = String(formData.get("email"));
     const password = String(formData.get("password"));
@@ -43,6 +45,7 @@ export function LoginForm({
             toast.error(ctx.error.message);
           },
           onSuccess: () => {
+            refetch();
             toast.success("Login successful. Good to have you back.");
           },
         },

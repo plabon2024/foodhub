@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 
-const API_BASE = "http://localhost:5000/api/orders";
+const baseurl = process.env.AUTH_URL;
+
+const API_BASE = `${baseurl}/api/orders`;
 
 export type OrderDetails = {
   id: string;

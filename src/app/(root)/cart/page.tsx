@@ -6,45 +6,43 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
 
-import { useUser } from "@/lib/user-context";
 import { useCart } from "@/lib/cart/cart-context";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useUser } from "@/lib/user-context";
 
 export default function CartPage() {
+
+  
+  const { user, isPending } = useUser();
   const router = useRouter();
-  const { user, isLoading } = useUser();
-  const { items, remove, clear, increase, decrease } = useCart();
-
-  /* ---------------- Guard ---------------- */
   useEffect(() => {
-    if (isLoading) return;
+    if (isPending) return;
 
-    if (!user) {
-      router.replace("/login");
-      return;
+    if (!user || user.role !== "CUSTOMER") {
+      router.push("/");
     }
+  }, [user, isPending, router]);
 
-    if (user.role !== "CUSTOMER") {
-      router.replace("/");
-    }
-  }, [user, isLoading, router]);
-
-  /* ---------------- Loading ---------------- */
-  if (isLoading || !user || user.role !== "CUSTOMER") {
+ 
+  if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
+  if (!user || user.role !== "CUSTOMER") {
+    return null;
+  }
+
+
+  const { items, remove, clear, increase, decrease } = useCart();
+
   /* ---------------- Cart Logic ---------------- */
-  const total = items.reduce(
-    (sum, i) => sum + i.price * i.quantity,
-    0
-  );
+  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   if (items.length === 0) {
     return (
@@ -127,9 +125,7 @@ export default function CartPage() {
 
                 {/* Price & Remove */}
                 <div className="flex flex-col items-end gap-2">
-                  <p className="font-semibold">
-                    ৳{i.price * i.quantity}
-                  </p>
+                  <p className="font-semibold">৳{i.price * i.quantity}</p>
 
                   <button
                     onClick={() => remove(i.mealId)}

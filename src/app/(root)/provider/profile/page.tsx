@@ -1,39 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { useUser } from "@/lib/user-context";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 
 import {
-  User,
-  Mail,
-  MapPin,
-  Phone,
   Briefcase,
   CheckCircle2,
+  Mail,
+  MapPin,
+  Phone
 } from "lucide-react";
+import { useUser } from "@/lib/user-context";
 
 /* ---------------- API ---------------- */
-const API = "http://localhost:5000/api";
+  const baseurl = process.env.AUTH_URL;
+
+const API = `${baseurl}/api`;
 
 async function updateProfile(payload: any) {
   const res = await fetch(`${API}/auth/profile`, {
@@ -50,12 +52,12 @@ async function updateProfile(payload: any) {
 /* ---------------- Page ---------------- */
 export default function ProviderProfilePage() {
   const router = useRouter();
-  const { user, isLoading, refetch } = useUser();
+  const { user, isPending, refetch } = useUser();
   const [form, setForm] = useState<any>({});
 
   /* -------- PROVIDER GUARD -------- */
   useEffect(() => {
-    if (isLoading) return;
+    if (isPending) return;
 
     if (!user) {
       router.replace("/login");
@@ -65,7 +67,7 @@ export default function ProviderProfilePage() {
     if (user.role !== "PROVIDER") {
       router.replace("/");
     }
-  }, [user, isLoading, router]);
+  }, [user, isPending, router]);
 
   const updateMutation = useMutation({
     mutationFn: updateProfile,
@@ -77,7 +79,7 @@ export default function ProviderProfilePage() {
   });
 
   /* -------- Loading / Block -------- */
-  if (isLoading || !user || user.role !== "PROVIDER") {
+  if (isPending || !user || user.role !== "PROVIDER") {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Skeleton className="h-40 w-full max-w-xl" />

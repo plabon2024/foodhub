@@ -13,7 +13,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useCart } from "@/lib/cart/cart-context";
 
 /* ---------------- API ---------------- */
-const API_PROVIDERS = "http://localhost:5000/api/providers";
+const baseurl = process.env.AUTH_URL;
+
+const API_PROVIDERS = `${baseurl}/api/providers`;
 
 /* ---------------- Types ---------------- */
 type ProviderDetails = {
