@@ -1,5 +1,4 @@
-"use client";
-
+"use client"
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -10,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+
 import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,7 +20,7 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -45,7 +44,6 @@ export function LoginForm({
           },
           onSuccess: () => {
             toast.success("Login successful. Good to have you back.");
-            router.push("/");
           },
         },
       );
@@ -58,7 +56,7 @@ export function LoginForm({
 
   return (
     <form
-      className={cn("flex flex-col gap-6", className)}
+      className={cn("flex flex-col gap-6 w-full", className)}
       onSubmit={handleSubmit}
       {...props}
     >

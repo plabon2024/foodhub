@@ -91,7 +91,7 @@ export default function OrdersPage() {
 
   /* -------- UI -------- */
   return (
-    <div className="p-6 space-y-6 mx-auto max-w-5xl container">
+    <div className="p-6 space-y-6 mx-auto max-w-8xl container">
       <div>
         <h1 className="text-2xl font-semibold">My Orders</h1>
         <p className="text-sm text-muted-foreground">
@@ -104,54 +104,59 @@ export default function OrdersPage() {
           You haven’t placed any orders yet.
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">View</TableHead>
-            </TableRow>
-          </TableHeader>
+       <Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead className="p-6">Order</TableHead>
+      <TableHead className="p-6">Status</TableHead>
+      <TableHead className="p-6">Provider</TableHead>
+      <TableHead className="p-6">Total</TableHead>
+      <TableHead className="p-6">Items</TableHead>
+      <TableHead className="p-6">Created</TableHead>
+      <TableHead className="p-6 text-right">View</TableHead>
+    </TableRow>
+  </TableHeader>
 
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-mono text-xs">
-                  {order.id.slice(0, 8)}…
-                </TableCell>
+  <TableBody>
+    {orders.map((order) => (
+      <TableRow key={order.id}>
+        <TableCell className="p-6 font-mono text-xs">
+          {order.id.slice(0, 8)}…
+        </TableCell>
 
-                <TableCell>
-                  <Badge>{order.status}</Badge>
-                </TableCell>
+        <TableCell className="p-6">
+          <Badge>{order.status}</Badge>
+        </TableCell>
 
-                <TableCell>
-                  {order.provider?.name ?? "Unknown Provider"}
-                </TableCell>
+        <TableCell className="p-6">
+          {order.provider?.name ?? "Unknown Provider"}
+        </TableCell>
 
-                <TableCell>৳{order.totalAmount}</TableCell>
+        <TableCell className="p-6">
+          ৳{order.totalAmount}
+        </TableCell>
 
-                <TableCell>{order.items?.length ?? 0}</TableCell>
+        <TableCell className="p-6">
+          {order.items?.length ?? 0}
+        </TableCell>
 
-                <TableCell>
-                  {new Date(order.createdAt).toLocaleString()}
-                </TableCell>
+        <TableCell className="p-6">
+          {new Date(order.createdAt).toLocaleString()}
+        </TableCell>
 
-                <TableCell className="text-right">
-                  <Link
-                    href={`/orders/${order.id}`}
-                    className="text-primary hover:underline text-sm"
-                  >
-                    View
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <TableCell className="p-6 text-right">
+          <Link
+            href={`/orders/${order.id}`}
+            className="text-primary hover:underline text-sm"
+          >
+            View
+          </Link>
+        </TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+
       )}
     </div>
   );

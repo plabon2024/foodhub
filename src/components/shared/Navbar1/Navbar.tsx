@@ -1,0 +1,195 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import { MenuIcon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
+
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from "@/components/ui/navigation-menu";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+import { useUser } from "@/lib/user-context";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { ModeToggle } from "../navbar/ModeToggle";
+
+export default function Navbar() {
+  const { user, isLoading } = useUser();
+  const { theme } = useTheme();
+
+  const [mounted, setMounted] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 80) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+      setLastScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", controlNavbar);
+    return () => window.removeEventListener("scroll", controlNavbar);
+  }, [lastScrollY]);
+
+  if (!mounted) return null;
+
+  /* ---------------- Menus ---------------- */
+  const commonLinks = [
+    { href: "/", label: "Home" },
+    { href: "/meals", label: "Meals" },
+    { href: "/providers", label: "Providers" },
+  ];
+
+  const customerLinks = [
+    { href: "/cart", label: "Cart" },
+    { href: "/orders", label: "My Orders" },
+    { href: "/profile", label: "Profile" },
+  ];
+
+  const providerLinks = [
+    { href: "/provider/dashboard", label: "Dashboard" },
+    { href: "/provider/orders", label: "Orders" },
+    { href: "/provider/menu", label: "Menu" },
+    { href: "/provider/profile", label: "Profile" },
+  ];
+
+  const adminLinks = [
+    { href: "/admin", label: "Dashboard" },
+    { href: "/admin/users", label: "Users" },
+    { href: "/admin/providers", label: "Providers" },
+    { href: "/admin/orders", label: "Orders" },
+    { href: "/admin/categories", label: "Categories" },
+  ];
+
+  function renderLinks(isMobile = false) {
+    const base = commonLinks;
+    const roleLinks =
+      user?.role === "CUSTOMER"
+        ? customerLinks
+        : user?.role === "PROVIDER"
+        ? providerLinks
+        : user?.role === "ADMIN"
+        ? adminLinks
+        : [];
+
+    const links = [...base, ...roleLinks];
+
+    return links.map((l) =>
+      isMobile ? (
+        <Link
+          key={l.href}
+          href={l.href}
+          className="font-medium text-base hover:text-primary"
+        >
+          {l.label}
+        </Link>
+      ) : (
+        <NavigationMenuItem key={l.href}>
+          <NavigationMenuLink
+            href={l.href}
+            className="px-4 py-2 rounded-lg hover:bg-muted transition font-semibold text-sm"
+          >
+            {l.label}
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+      )
+    );
+  }
+
+  return (
+    <section
+      className={`fixed top-0 z-50 w-full backdrop-blur-xl transition-transform duration-300
+        ${theme === "light" ? "bg-white/70" : "bg-black/70"}
+        ${hidden ? "-translate-y-full" : "translate-y-0"}`}
+    >
+      <div className="container mx-auto px-4">
+        <nav className="flex items-center justify-between py-4 gap-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">M</span>
+            </div>
+            <span className="font-bold text-lg hidden sm:inline">
+              MealBD
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <NavigationMenu className="hidden lg:block">
+            <NavigationMenuList>{renderLinks()}</NavigationMenuList>
+          </NavigationMenu>
+
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center gap-3">
+            <ModeToggle />
+
+            {!isLoading && !user && (
+              <>
+                <Link href="/login">Login</Link>
+                <Button asChild>
+                  <Link href="/register">Register</Link>
+                </Button>
+              </>
+            )}
+
+            {!isLoading && user && <SignOutButton />}
+          </div>
+
+          {/* Mobile */}
+          <div className="lg:hidden flex items-center gap-2  ">
+            <ModeToggle />
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MenuIcon className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+
+              <SheetContent side="right" className="w-72">
+                <SheetHeader>
+                  <SheetTitle>MealBD</SheetTitle>
+                </SheetHeader>
+
+                <div className="flex flex-col gap-4  p-4">
+                  {renderLinks(true)}
+
+                  <div className="pt-4 border-t flex flex-col gap-2">
+                    {!user ? (
+                      <>
+                        <Link href="/login">Login</Link>
+                        <Link href="/register">Register</Link>
+                      </>
+                    ) : (
+                      <SignOutButton />
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </nav>
+      </div>
+    </section>
+  );
+}

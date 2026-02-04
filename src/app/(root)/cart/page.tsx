@@ -2,36 +2,36 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
 
 import { useUser } from "@/lib/user-context";
 import { useCart } from "@/lib/cart/cart-context";
 
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function CartPage() {
   const router = useRouter();
   const { user, isLoading } = useUser();
-  const { items, remove } = useCart();
+  const { items, remove, clear, increase, decrease } = useCart();
 
   /* ---------------- Guard ---------------- */
   useEffect(() => {
     if (isLoading) return;
 
-    // Not logged in
     if (!user) {
       router.replace("/login");
       return;
     }
 
-    // Logged in but not customer
     if (user.role !== "CUSTOMER") {
       router.replace("/");
     }
   }, [user, isLoading, router]);
 
-  /* ---------------- Loading / Block ---------------- */
+  /* ---------------- Loading ---------------- */
   if (isLoading || !user || user.role !== "CUSTOMER") {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -47,42 +47,110 @@ export default function CartPage() {
   );
 
   if (items.length === 0) {
-    return <div className="p-6 text-center">Your cart is empty</div>;
+    return (
+      <div className="mx-auto max-w-4xl p-6 text-center text-muted-foreground">
+        Your cart is empty
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-4">
-      <h1 className="text-xl font-semibold">Your Cart</h1>
+    <div className="mx-auto max-w-4xl space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Your Cart</h1>
 
-      {items.map((i) => (
-        <div
-          key={i.mealId}
-          className="flex justify-between items-center border-b pb-2"
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={clear}
+          className="gap-2"
         >
-          <div>
-            <div className="font-medium">{i.name}</div>
-            <div className="text-sm text-muted-foreground">
-              Qty: {i.quantity}
-            </div>
-          </div>
+          <Trash2 className="h-4 w-4" />
+          Clear Cart
+        </Button>
+      </div>
 
-          <div className="flex items-center gap-3">
-            <div className="font-medium">
-              ৳{i.price * i.quantity}
-            </div>
-            <button
-              onClick={() => remove(i.mealId)}
-              className="text-sm text-red-500 hover:underline"
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      ))}
+      {/* Cart Items */}
+      <div className="space-y-4">
+        {items.map((i) => (
+          <Card key={i.mealId}>
+            <CardContent className="flex gap-4 p-4">
+              {/* Image */}
+              <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+                {i.imageUrl ? (
+                  <Image
+                    src={i.imageUrl}
+                    alt={i.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                    No Image
+                  </div>
+                )}
+              </div>
 
-      <div className="font-bold text-right">Total: ৳{total}</div>
+              {/* Info */}
+              <div className="flex flex-1 items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">{i.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    ৳{i.price} each
+                  </p>
+                </div>
 
-      <Button asChild className="w-full">
+                {/* Quantity Controls */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => decrease(i.mealId)}
+                    disabled={i.quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+
+                  <span className="w-6 text-center font-medium">
+                    {i.quantity}
+                  </span>
+
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => increase(i.mealId)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Price & Remove */}
+                <div className="flex flex-col items-end gap-2">
+                  <p className="font-semibold">
+                    ৳{i.price * i.quantity}
+                  </p>
+
+                  <button
+                    onClick={() => remove(i.mealId)}
+                    className="text-sm text-red-500 hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Summary */}
+      <div className="flex items-center justify-between border-t pt-4">
+        <span className="text-lg font-semibold">Total</span>
+        <span className="text-lg font-bold">৳{total}</span>
+      </div>
+
+      <Button asChild size="lg" className="w-full">
         <Link href="/checkout">Proceed to Checkout</Link>
       </Button>
     </div>

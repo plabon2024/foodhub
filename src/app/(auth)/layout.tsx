@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import React, { useEffect } from "react";
 import {
   ResizableHandle,
@@ -9,39 +10,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/lib/user-context";
-export default function layout({
+
+export default function AuthLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
-    const router = useRouter();
-    const { user, isLoading } = useUser();
-  
-    useEffect(() => {
-      if (!isLoading && user) {
-        router.push("/"); // redirect if already logged in
-      }
-    }, [user, isLoading, router]);
-  
-    // While checking session → avoid flicker
-    if (isLoading) {
-      return null;
-    }
-  
-    // If logged in, page will redirect
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const { user, isLoading: userLoading } = useUser();
+  useEffect(() => {
+    if (userLoading) return;
+
     if (user) {
-      return null;
+      router.push("/");
     }
+  }, [user, userLoading, router]);
   return (
     <main className="min-h-screen">
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="min-h-screen w-full"
-      >
+      <ResizablePanelGroup direction="horizontal" className="min-h-screen">
         {/* FORM PANEL */}
         <ResizablePanel defaultSize={50}>
-          <section className="flex min-h-screen items-center bg-pattern bg-cover bg-top bg-dark-100 px-5 py-10">
-            <div className="gradient-vertical mx-auto flex w-full max-w-xl flex-col gap-6 rounded-lg p-10">
+          <section className="flex min-h-screen items-center bg-dark-100 px-5 py-10">
+            <div className="mx-auto w-full max-w-xl rounded-lg p-10">
               <Link href="/">
-                <h1 className="text-2xl font-semibold ">Food Hub</h1>
+                <h1 className="mb-6 text-2xl font-semibold">Food Hub</h1>
               </Link>
               {children}
             </div>
@@ -52,7 +44,7 @@ export default function layout({
 
         {/* IMAGE PANEL */}
         <ResizablePanel defaultSize={50} className="hidden lg:block">
-          <section className=" top-0 h-full relative">
+          <section className="relative min-h-screen w-full ">
             <Image
               src="/food.png"
               alt="auth illustration"

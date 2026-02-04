@@ -40,7 +40,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ReactQueryProvider>
-            <Toaster richColors position="top-center" />
+            <Toaster richColors position="bottom-center" />
             <CartProvider>
               <UserProvider>{children}</UserProvider>
             </CartProvider>
