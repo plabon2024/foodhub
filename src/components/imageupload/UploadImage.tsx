@@ -1,33 +1,54 @@
 "use client";
-import { useState } from "react";
 
-export default function UploadImage({ onUpload }) {
-  const [uploading, setUploading] = useState(false);
+import { useState, ChangeEvent } from "react";
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+/* ---------------- Types ---------------- */
+type UploadImageProps = {
+  onUpload: (url: string) => void;
+};
+
+type CloudinaryResponse = {
+  secure_url: string;
+};
+
+/* ---------------- Component ---------------- */
+export default function UploadImage({ onUpload }: UploadImageProps) {
+  const [uploading, setUploading] = useState<boolean>(false);
+
+  const handleFileChange = async (
+    e: ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append(
       "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET as string
     );
 
     try {
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        `https://api.cloudinary.com/v1_1/${
+          process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string
+        }/image/upload`,
         {
           method: "POST",
           body: formData,
         }
       );
-      const data = await res.json();
-      onUpload(data.secure_url); // send back URL
+
+      if (!res.ok) {
+        throw new Error("Cloudinary upload failed");
+      }
+
+      const data: CloudinaryResponse = await res.json();
+      onUpload(data.secure_url);
     } catch (error) {
-      console.error("Upload failed", error);
+      console.error("Upload failed:", error);
     } finally {
       setUploading(false);
     }
@@ -39,8 +60,10 @@ export default function UploadImage({ onUpload }) {
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        className="cursor-pointer"
+        disabled={uploading}
+        className="cursor-pointer text-sm"
       />
+
       {uploading && (
         <p className="text-sm text-muted-foreground">Uploading...</p>
       )}

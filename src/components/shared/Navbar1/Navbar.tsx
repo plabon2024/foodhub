@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useTheme } from "next-themes";
 import { MenuIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,9 +20,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { useUser } from "@/lib/user-context";
-import { ModeToggle } from "../navbar/ModeToggle";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { useUser } from "@/lib/user-context";
+import { ModeToggle } from "./ModeToggle";
+import { FoodHubLogo } from "./foodhub-logo";
 
 /* ---------------- Component ---------------- */
 export default function Navbar() {
@@ -76,7 +77,6 @@ export default function Navbar() {
   const adminLinks = [
     { href: "/admin", label: "Dashboard" },
     { href: "/admin/users", label: "Users" },
-    { href: "/admin/providers", label: "Providers" },
     { href: "/admin/orders", label: "Orders" },
     { href: "/admin/categories", label: "Categories" },
   ];
@@ -124,12 +124,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <nav className="flex items-center justify-between py-4 gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">M</span>
-            </div>
-            <span className="hidden sm:inline font-bold text-lg">MealBD</span>
-          </Link>
+          <FoodHubLogo></FoodHubLogo>
 
           {/* Desktop Nav */}
           <NavigationMenu className="hidden lg:block">
@@ -148,7 +143,7 @@ export default function Navbar() {
                 </Button>
               </>
             ) : (
-             <SignOutButton></SignOutButton>
+              <SignOutButton></SignOutButton>
             )}
           </div>
 
@@ -165,7 +160,7 @@ export default function Navbar() {
 
               <SheetContent side="right" className="w-72">
                 <SheetHeader>
-                  <SheetTitle>MealBD</SheetTitle>
+                  <FoodHubLogo></FoodHubLogo>
                 </SheetHeader>
 
                 <div className="flex flex-col gap-4 p-4">

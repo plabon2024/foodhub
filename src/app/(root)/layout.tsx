@@ -1,4 +1,5 @@
-import Navbar2 from "@/components/shared/navbar/Navbar";
+import Footer from "@/components/shared/Footer/footer";
+import CheckoutOurMenuSection from "@/components/shared/Hero/menu";
 import Navbar from "@/components/shared/Navbar1/Navbar";
 import React from "react";
 
@@ -9,7 +10,11 @@ export default function layout({
     <div>
       <Navbar></Navbar>
 
-      <div className="py-16">{children}</div>
+      <div className="pt-16">{children}
+         <Footer></Footer>
+      </div>
+
+     
     </div>
   );
 }

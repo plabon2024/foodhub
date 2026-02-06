@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import { Loader2 } from "lucide-react"
-import { FoodHubLogo } from "./foodhub-logo"
+import { FoodHubLogo } from "./shared/Navbar1/foodhub-logo"
 
 /* -----------------------------
    MENU CONFIG (ROLE BASED)

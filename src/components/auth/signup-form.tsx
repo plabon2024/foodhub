@@ -32,8 +32,11 @@ type SignupPayload = {
   callbackURL: string;
 };
 
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
+const API = `${baseurl}/api/auth/sign-up/email`;
+
 async function signup(payload: SignupPayload) {
-  const res = await fetch("http://localhost:5000/api/auth/sign-up/email", {
+  const res = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
