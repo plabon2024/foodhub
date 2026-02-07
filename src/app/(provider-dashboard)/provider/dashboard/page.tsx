@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 

@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/lib/user-context";
+import { FoodHubLogo } from "@/components/shared/Navbar1/foodhub-logo";
 
 export default function AuthLayout({
   children,
@@ -21,7 +22,6 @@ export default function AuthLayout({
 
   useEffect(() => {
     if (user) {
-      
       router.push("/");
     }
   }, [user, router]);
@@ -34,9 +34,7 @@ export default function AuthLayout({
         <ResizablePanel defaultSize={50}>
           <section className="flex min-h-screen items-center bg-dark-100 px-5 py-10">
             <div className="mx-auto w-full max-w-xl rounded-lg p-10">
-              <Link href="/">
-                <h1 className="mb-6 text-2xl font-semibold">Food Hub</h1>
-              </Link>
+             <FoodHubLogo></FoodHubLogo>
               {children}
             </div>
           </section>

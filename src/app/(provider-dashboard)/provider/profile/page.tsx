@@ -81,6 +81,7 @@ export default function ProviderProfilePage() {
     onError: () => toast.error("Failed to update profile"),
   });
 
+  /* ---------------- Guard ---------------- */
   if (isPending || !user || user.role !== "PROVIDER") {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -93,15 +94,26 @@ export default function ProviderProfilePage() {
 
   /* ---------------- Submit ---------------- */
   function submit() {
+    // ✅ Re-guard to satisfy TypeScript closure analysis
+    if (!user) return;
+
     const payload: Record<string, any> = {};
 
-    if (form.imageUrl !== user.image) payload.image = form.imageUrl;
-    if (form.description !== user.providerProfile?.description)
+    if (form.imageUrl !== user.image) {
+      payload.image = form.imageUrl;
+    }
+
+    if (form.description !== user.providerProfile?.description) {
       payload.description = form.description;
-    if (form.address !== user.providerProfile?.address)
+    }
+
+    if (form.address !== user.providerProfile?.address) {
       payload.address = form.address;
-    if (form.phone !== user.providerProfile?.phone)
+    }
+
+    if (form.phone !== user.providerProfile?.phone) {
       payload.phone = form.phone;
+    }
 
     if (Object.keys(payload).length === 0) {
       toast.message("No changes to save");
@@ -120,7 +132,7 @@ export default function ProviderProfilePage() {
             {avatarUrl ? (
               <Image
                 src={avatarUrl}
-                alt={user.name}
+                alt={user.name ?? "User"}
                 fill
                 className="object-cover rounded-full"
               />

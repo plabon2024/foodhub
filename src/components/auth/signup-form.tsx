@@ -1,16 +1,14 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import * as React from "react";
 import { toast } from "sonner";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 
 /* ----------------------------- API CALL ----------------------------- */
@@ -86,7 +85,7 @@ export function SignupForm({
       password: String(formData.get("password")),
       name: String(formData.get("name")),
       role,
-      callbackURL: "http://localhost:3000",
+      callbackURL: process.env.NEXT_PUBLIC_AUTH_URL as string,
     });
   }
 
@@ -159,9 +158,7 @@ export function SignupForm({
           </Button>
         </Field>
 
-    
         <Field>
-        
           <FieldDescription className="px-6 text-center">
             Already have an account? <a href="/login">Sign in</a>
           </FieldDescription>

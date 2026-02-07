@@ -13,9 +13,7 @@ import { Card } from "@/components/ui/card";
 import { useCart } from "@/lib/cart/cart-context";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
-
+const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
 const API_PROVIDERS = `${baseurl}/api/providers`;
 
 /* ---------------- Types ---------------- */
@@ -76,10 +74,13 @@ export default function ProviderDetailsPage() {
     );
   }
 
+  // ✅ capture non-null value once
+  const providerId = provider.id;
+
   /* ---------------- Cart Handler ---------------- */
   function handleAddToCart(meal: ProviderDetails["meals"][0]) {
     // Enforce single-provider cart
-    if (items.length > 0 && items[0].providerId !== provider.id) {
+    if (items.length > 0 && items[0].providerId !== providerId) {
       toast.error("You can only order from one provider at a time");
       return;
     }
@@ -89,7 +90,7 @@ export default function ProviderDetailsPage() {
       name: meal.name,
       price: Number(meal.price),
       quantity: 1,
-      providerId: provider.id,
+      providerId,
     });
 
     toast.success(`${meal.name} added to cart`);
@@ -116,7 +117,9 @@ export default function ProviderDetailsPage() {
           </Avatar>
 
           <div className="flex-1 space-y-2">
-            <h1 className="text-2xl font-semibold sm:text-3xl">{provider.name}</h1>
+            <h1 className="text-2xl font-semibold sm:text-3xl">
+              {provider.name}
+            </h1>
 
             {provider.description && provider.description.trim() !== "" && (
               <p className="text-sm text-muted-foreground sm:text-base">
@@ -148,7 +151,8 @@ export default function ProviderDetailsPage() {
           <h2 className="text-xl font-semibold sm:text-2xl">Menu</h2>
           {provider.meals.length > 0 && (
             <Badge variant="secondary" className="text-sm">
-              {provider.meals.length} {provider.meals.length === 1 ? 'item' : 'items'}
+              {provider.meals.length}{" "}
+              {provider.meals.length === 1 ? "item" : "items"}
             </Badge>
           )}
         </div>
@@ -164,22 +168,17 @@ export default function ProviderDetailsPage() {
                 key={meal.id}
                 className="group overflow-hidden rounded-xl border transition hover:shadow-xl p-0"
               >
-                {/* ================= Image ================= */}
+                {/* Image */}
                 <div className="relative h-56 overflow-hidden bg-muted">
                   {meal.imageUrl ? (
                     <>
-                      {/* Image */}
                       <Image
                         src={meal.imageUrl}
                         alt={meal.name}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-
-                      {/* Gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-
-                      {/* Price badge */}
                       <span className="absolute bottom-2 right-2 rounded-md bg-background/90 px-2.5 py-1 text-sm font-semibold shadow backdrop-blur-sm">
                         ৳{meal.price}
                       </span>
@@ -190,13 +189,12 @@ export default function ProviderDetailsPage() {
                     </div>
                   )}
 
-                  {/* Category badge */}
                   <span className="absolute left-2 top-2 rounded-full bg-background/90 px-3 py-1 text-xs font-medium shadow backdrop-blur-sm">
                     {meal.category.name}
                   </span>
                 </div>
 
-                {/* ================= Content ================= */}
+                {/* Content */}
                 <div className="space-y-3 p-4">
                   <div className="space-y-1">
                     <h3 className="line-clamp-1 text-base font-semibold">
@@ -210,7 +208,6 @@ export default function ProviderDetailsPage() {
                     )}
                   </div>
 
-                  {/* Add to Cart Button */}
                   <Button
                     size="sm"
                     onClick={() => handleAddToCart(meal)}

@@ -3,7 +3,7 @@ import { inferAdditionalFields } from "better-auth/client/plugins";
 import { nextCookies } from "better-auth/next-js";
 
 const authClient = createAuthClient({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
+  baseURL: process.env.NEXT_PUBLIC_AUTH_URL,
   plugins: [inferAdditionalFields(), nextCookies()],
 });
 

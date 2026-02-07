@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import { useCart } from "@/lib/cart/cart-context";
 import { useUser } from "@/lib/user-context";
@@ -18,12 +19,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
 
 /* ---------------- API ---------------- */
 async function createOrder(payload: any) {
-  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
+  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
 
   const res = await fetch(`${baseurl}/api/orders`, {
     method: "POST",
@@ -39,7 +38,12 @@ async function createOrder(payload: any) {
 /* ---------------- Page ---------------- */
 export default function CheckoutPage() {
   const { user, isPending } = useUser();
+  const { items, clear } = useCart();
   const router = useRouter();
+
+  const [address, setAddress] = useState("");
+
+  /* -------- Auth Guard -------- */
   useEffect(() => {
     if (isPending) return;
 
@@ -48,43 +52,11 @@ export default function CheckoutPage() {
     }
   }, [user, isPending, router]);
 
+  /* -------- Loading -------- */
   if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!user || user.role !== "CUSTOMER") {
-    return null;
-  }
-
-  const { items, clear } = useCart();
-  const [address, setAddress] = useState("");
-
-  const providerId = items[0]?.providerId;
-
-  const totalAmount = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
-
-  const mutation = useMutation({
-    mutationFn: createOrder,
-    onSuccess: () => {
-      toast.success("Order placed (Cash on Delivery)");
-      clear();
-      router.push("/orders");
-    },
-    onError: () => toast.error("Failed to place order"),
-  });
-
-  /* -------- Loading -------- */
-  if (userLoading) {
-    return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
@@ -102,13 +74,30 @@ export default function CheckoutPage() {
     );
   }
 
+  const providerId = items[0].providerId;
+
+  const totalAmount = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const mutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: () => {
+      toast.success("Order placed (Cash on Delivery)");
+      clear();
+      router.push("/orders");
+    },
+    onError: () => toast.error("Failed to place order"),
+  });
+
   /* -------- UI -------- */
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
       <h1 className="text-xl font-semibold">Checkout</h1>
 
       {/* Products */}
-      <div className="border rounded-lg">
+      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>

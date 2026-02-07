@@ -11,6 +11,7 @@ import { signIn } from "@/lib/auth-client";
 import { useUser } from "@/lib/user-context";
 
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 import * as React from "react";
 import { useState } from "react";
@@ -22,7 +23,8 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-   const { refetch, user } = useUser();
+   const { refetch, user ,setUser } = useUser();
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -46,7 +48,9 @@ export function LoginForm({
           },
           onSuccess: () => {
             refetch();
+            setUser(user);
             toast.success("Login successful. Good to have you back.");
+            router.push("/")
           },
         },
       );

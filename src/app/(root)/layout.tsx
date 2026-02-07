@@ -1,5 +1,6 @@
+export const dynamic = "force-dynamic";
+
 import Footer from "@/components/shared/Footer/footer";
-import CheckoutOurMenuSection from "@/components/shared/Hero/menu";
 import Navbar from "@/components/shared/Navbar1/Navbar";
 import React from "react";
 
@@ -10,11 +11,13 @@ export default function layout({
     <div>
       <Navbar></Navbar>
 
-      <div className="pt-16">{children}
-         <Footer></Footer>
-      </div>
+      <div className="pt-16">
+        <div className="min-h-screen">
 
-     
+        {children}
+        </div>
+        <Footer></Footer>
+      </div>
     </div>
   );
 }
