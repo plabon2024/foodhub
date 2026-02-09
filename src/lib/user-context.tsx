@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useTransition } from "react";
 import { getUser } from "@/actions/user.action";
 
-/* ---------------- Types ---------------- */
 export type UserRole = "ADMIN" | "CUSTOMER" | "PROVIDER";
 
 export type ProviderProfile = {
@@ -27,15 +26,12 @@ export type User = {
 
 type UserContextType = {
   user: User | null;
-  setUser: (user: User | null) => void;
   refetch: () => Promise<void>;
   isPending: boolean;
 };
 
-/* ---------------- Context ---------------- */
 const UserContext = createContext<UserContextType | null>(null);
 
-/* ---------------- Provider ---------------- */
 export function UserProvider({
   children,
   initialUser,
@@ -49,29 +45,19 @@ export function UserProvider({
   async function refetch() {
     startTransition(async () => {
       const res = await getUser();
-      setUser(res.data);
+      setUser(res.data ?? null);
     });
   }
 
   return (
-    <UserContext.Provider
-      value={{
-        user,
-        setUser,
-        refetch,
-        isPending,
-      }}
-    >
+    <UserContext.Provider value={{ user, refetch, isPending }}>
       {children}
     </UserContext.Provider>
   );
 }
 
-/* ---------------- Hook ---------------- */
 export function useUser() {
   const ctx = useContext(UserContext);
-  if (!ctx) {
-    throw new Error("useUser must be used inside UserProvider");
-  }
+  if (!ctx) throw new Error("useUser must be used inside UserProvider");
   return ctx;
 }

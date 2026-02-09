@@ -28,8 +28,8 @@ import { FoodHubLogo } from "./foodhub-logo";
 /* ---------------- Component ---------------- */
 export default function Navbar() {
   const { theme } = useTheme();
-  const { user, isPending, setUser } = useUser();
-
+  const { user, isPending,  } = useUser();
+console.log(user)
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
