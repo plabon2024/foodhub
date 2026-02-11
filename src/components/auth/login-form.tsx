@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -8,11 +7,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { signIn } from "@/lib/auth-client";
 import { useUser } from "@/lib/user-context";
-import { authClient } from "@/lib/auth-client";
+
 import { cn } from "@/lib/utils";
+
 import * as React from "react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function LoginForm({
   className,
@@ -20,33 +22,36 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const { refetch } = useUser();
-
+   const { refetch, user } = useUser();
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
+ 
     const formData = new FormData(e.currentTarget);
     const email = String(formData.get("email"));
     const password = String(formData.get("password"));
 
     try {
-      await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      // Refresh user state after successful login
-      await refetch();
-
-      // Optional redirect
-      window.location.href = "/";
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Invalid email or password"
+      await signIn.email(
+        {
+          email,
+          password,
+        },
+        {
+          onRequest: () => {},
+          onResponse: () => {},
+          onError: (ctx) => {
+            toast.error(ctx.error.message);
+          },
+          onSuccess: () => {
+            refetch();
+            toast.success("Login successful. Good to have you back.");
+          },
+        },
       );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -78,13 +83,22 @@ export function LoginForm({
             id="email"
             name="email"
             type="email"
+            placeholder="m@example.com"
             required
             disabled={isLoading}
           />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <div className="flex items-center">
+            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <a
+              href="/forgot-password"
+              className="ml-auto text-sm underline-offset-4 hover:underline"
+            >
+              Forgot your password?
+            </a>
+          </div>
           <Input
             id="password"
             name="password"
@@ -94,9 +108,20 @@ export function LoginForm({
           />
         </Field>
 
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? "Logging in..." : "Login"}
-        </Button>
+        <Field>
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
+        </Field>
+
+        <Field>
+          <FieldDescription className="text-center">
+            Don&apos;t have an account?{" "}
+            <a href="/register" className="underline underline-offset-4">
+              Sign up
+            </a>
+          </FieldDescription>
+        </Field>
       </FieldGroup>
     </form>
   );
