@@ -1,8 +1,8 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { prisma } from "./prisma";
 import nodemailer from "nodemailer";
 import { verificationEmailTemplate } from "../emails/verificationEmail";
+import { prisma } from "./prisma";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -96,16 +96,30 @@ export const auth = betterAuth({
         },
       },
     },
-  }, session: {
+  },
+  session: {
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60,
     },
-    cookie: {
-      sameSite: "none", // ✅ REQUIRED FOR CROSS DOMAIN
-      secure: true,     // ✅ REQUIRED (HTTPS)
+  },
+  cookies: {
+    namePrefix: 'better-auth',
+    attributes: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none', 
+      path: '/',
     },
   },
+  advanced: {
+    cookiePrefix: 'better-auth',
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    crossSubDomainCookies: {
+      enabled: false,
+    },
+    disableCSRFCheck: true, 
+  },
 
-
+  baseURL: `${process.env.BETTER_AUTH_URL}/api/auth`,
 });

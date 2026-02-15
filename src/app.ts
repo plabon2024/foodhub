@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Application } from "express";
 
@@ -30,9 +31,7 @@ const corsOptions: cors.CorsOptions = {
 
 
 app.use(cors(corsOptions));
-
-
-
+app.use(cookieParser());
 app.use(express.json());
 app.use("/api/auth", authRouter);
 app.all("/api/auth/*splat", toNodeHandler(auth));
