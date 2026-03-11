@@ -1,8 +1,10 @@
 import { prisma } from "../../lib/prisma";
 import { requireUser } from "../../lib/auth-user";
+import { requireAdmin } from "../../lib/require-admin";
 
 export async function createCategoryService(req: any) {
-  const user = await requireUser(req);
+  const user = await requireAdmin(req);
+
   if (user.role !== "ADMIN") throw new Error("FORBIDDEN");
 
   const { name, description } = req.body;
