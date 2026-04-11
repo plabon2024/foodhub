@@ -1,10 +1,6 @@
 import { prisma } from "../../lib/prisma";
-import { requireAdmin } from "../../lib/require-admin";
-import { requireAuthUser } from "../../lib/require-auth-user";
 
 export async function getAllUsersService(req: any) {
-  await requireAdmin(req);
-
   return prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -27,7 +23,6 @@ export async function getAllUsersService(req: any) {
 
 
 export async function updateUserStatusService(req: any) {
-  await requireAdmin(req);
 
   const userId = req.params?.id;
   const { status } = req.body;
@@ -82,7 +77,6 @@ export async function approveProviderApplication(
   req: any,
   applicationId: string
 ) {
-  await requireAdmin(req);
 
   const application = await prisma.providerApplication.findUnique({
     where: { id: applicationId },
@@ -133,7 +127,6 @@ export async function approveProviderApplication(
 
 
 export async function getAllProviderApplicationsService(req: any) {
-  await requireAdmin(req);
 
   return prisma.providerApplication.findMany({
     orderBy: { createdAt: "desc" },

@@ -1,7 +1,5 @@
-import { Prisma } from "../../../generated/prisma/client";
-import { requireUser } from "../../lib/auth-user";
+import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
-import { requireAuthUser } from "../../lib/require-auth-user";
 
 
 
@@ -224,17 +222,17 @@ export async function getProviderWithMenuService(providerId: string) {
 }
 
 export async function getStatsService(req: any) {
-  const user = await requireAuthUser(req);
+  const { userId, role } = req.user;
 
   // 🔒 CUSTOMER not allowed
-  if (user.role === "CUSTOMER") {
+  if (role === "CUSTOMER") {
     throw new Error("FORBIDDEN");
   }
 
   // ============================
   // 👑 ADMIN STATS (GLOBAL)
   // ============================
-  if (user.role === "ADMIN") {
+  if (role === "ADMIN") {
     const [
       totalUsers,
       customers,
@@ -317,12 +315,16 @@ export async function getStatsService(req: any) {
   // ============================
   // 🧑‍🍳 PROVIDER STATS (OWN)
   // ============================
-  if (user.role === "PROVIDER") {
-    if (!user.providerProfile) {
+  if (role === "PROVIDER") {
+    const providerProfile = await prisma.providerProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!providerProfile) {
       throw new Error("PROVIDER_PROFILE_NOT_FOUND");
     }
 
-    const providerId = user.providerProfile.id;
+    const providerId = providerProfile.id;
 
     const [
       totalMeals,

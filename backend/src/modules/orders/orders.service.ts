@@ -1,21 +1,16 @@
-import { Prisma } from "../../../generated/prisma/client";
-import { requireUser } from "../../lib/auth-user";
+import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
-
 export async function createOrderService(req: any) {
-  const user = await requireUser(req);
+  const { userId, role } = req.user;
 
- 
-  if (user.role !== "CUSTOMER") {
+  if (role !== "CUSTOMER") {
     throw new Error("ONLY_CUSTOMER_CAN_ORDER");
   }
 
-
-  if (user.status === "SUSPENDED") {
-    throw new Error("USER_SUSPENDED");
-  }
-
+  // Check user status directly from DB if needed, or assume checkAuth did it.
+  // checkAuth already checks for SUSPENDED status.
+  
   const { providerId, deliveryAddress, items } = req.body;
 
   if (!providerId || !deliveryAddress || !items?.length) {
@@ -67,7 +62,7 @@ export async function createOrderService(req: any) {
   //  Create order
   const order = await prisma.order.create({
     data: {
-      customerId: user.id,
+      customerId: userId,
       providerId,
       deliveryAddress,
       totalAmount,
@@ -85,12 +80,12 @@ export async function createOrderService(req: any) {
 
 
 export async function getMyOrdersService(req: any) {
-  const user = await requireUser(req);
+  const { userId, role } = req.user;
 
 
-  if (user.role === "CUSTOMER") {
+  if (role === "CUSTOMER") {
     return prisma.order.findMany({
-      where: { customerId: user.id },
+      where: { customerId: userId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -121,9 +116,9 @@ export async function getMyOrdersService(req: any) {
   }
 
 
-  if (user.role === "PROVIDER") {
+  if (role === "PROVIDER") {
     const providerProfile = await prisma.providerProfile.findUnique({
-      where: { userId: user.id },
+      where: { userId },
     });
 
     if (!providerProfile) return [];
@@ -160,7 +155,7 @@ export async function getMyOrdersService(req: any) {
   }
 
 
-  if (user.role === "ADMIN") {
+  if (role === "ADMIN") {
     return prisma.order.findMany({
       orderBy: { createdAt: "desc" },
       select: {
@@ -208,7 +203,7 @@ export async function getMyOrdersService(req: any) {
 
 
 export async function getOrderDetailsService(req: any) {
-  const user = await requireUser(req);
+  const { userId, role } = req.user;
   const orderId = req.params.id;
 
   if (!orderId) {
@@ -227,9 +222,9 @@ export async function getOrderDetailsService(req: any) {
   }
 
   // PROVIDER → only own orders
-  if (user.role === "PROVIDER") {
+  if (role === "PROVIDER") {
     const providerProfile = await prisma.providerProfile.findUnique({
-      where: { userId: user.id },
+      where: { userId },
     });
 
     if (!providerProfile) {
@@ -249,11 +244,11 @@ export async function getOrderDetailsService(req: any) {
   }
 
   // CUSTOMER → only own orders
-  if (user.role === "CUSTOMER") {
+  if (role === "CUSTOMER") {
     const order = await prisma.order.findFirst({
       where: {
         id: orderId,
-        customerId: user.id,
+        customerId: userId,
       },
       include: fullOrderInclude,
     });

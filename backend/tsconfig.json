@@ -12,8 +12,8 @@
     "strict": true,
     "esModuleInterop": true,
     // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
+    "lib": ["esnext"],
+    "types": ["node"],
     // and npm install -D @types/node
     // Other Outputs
     "sourceMap": true,
@@ -38,7 +38,8 @@
     "skipLibCheck": true,
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "prisma.config.ts"
   ],
   "exclude": [
     "node_modules",

@@ -1,7 +1,5 @@
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
-import { requireProvider } from "../../lib/require-provider";
-
 
 export async function applyForProviderService(userId: string) {
   const user = await prisma.user.findUnique({
@@ -34,15 +32,17 @@ export async function applyForProviderService(userId: string) {
   return application;
 }
 
-
-
-
-
-
 export async function createMealService(req: any) {
-  const provider = await requireProvider(req);
-
   const { categoryId, name, description, price, imageUrl } = req.body;
+  const userId = req.user.userId;
+
+  const provider = await prisma.providerProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!provider || !provider.isActive) {
+    throw new Error("PROVIDER_NOT_ACTIVE");
+  }
 
   if (!categoryId || !name || price === undefined) {
     throw new Error("INVALID_PAYLOAD");
@@ -60,11 +60,17 @@ export async function createMealService(req: any) {
   });
 }
 
-
-
 export async function updateMealService(req: any) {
-  const provider = await requireProvider(req);
   const { id } = req.params;
+  const userId = req.user.userId;
+
+  const provider = await prisma.providerProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!provider || !provider.isActive) {
+    throw new Error("PROVIDER_NOT_ACTIVE");
+  }
 
   if (!id) {
     throw new Error("MEAL_ID_REQUIRED");
@@ -120,9 +126,16 @@ export async function updateMealService(req: any) {
   });
 }
 
-
 export async function deleteMealService(req: any) {
-  const provider = await requireProvider(req);
+  const userId = req.user.userId;
+
+  const provider = await prisma.providerProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!provider || !provider.isActive) {
+    throw new Error("PROVIDER_NOT_ACTIVE");
+  }
 
   return prisma.meal.deleteMany({
     where: {
@@ -133,7 +146,16 @@ export async function deleteMealService(req: any) {
 }
 
 export async function updateOrderStatusService(req: any) {
-  const provider = await requireProvider(req);
+  const userId = req.user.userId;
+
+  const provider = await prisma.providerProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!provider || !provider.isActive) {
+    throw new Error("PROVIDER_NOT_ACTIVE");
+  }
+
   const { status } = req.body;
 
   if (!status) throw new Error("STATUS_REQUIRED");

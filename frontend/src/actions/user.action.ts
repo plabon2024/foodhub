@@ -1,10 +1,8 @@
 "use server";
 
-
-import { userService } from "@/servides/user.service";
-
+import { getUserInfo } from "@/services/auth.services";
 
 export const getUser = async () => {
-  return await userService.getSession();
+  const data = await getUserInfo();
+  return { data };
 };
-

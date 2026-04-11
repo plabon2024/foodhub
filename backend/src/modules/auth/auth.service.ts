@@ -1,19 +1,94 @@
-import { auth } from "../../lib/auth";
-import { requireUser } from "../../lib/auth-user";
-import { prisma } from "../../lib/prisma";
-import { Request } from "express";
+import status from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
+import { UserStatus } from '../../generated/prisma/enums';
+import envVars from '../../config';
+import AppError from '../../utils/AppError';
+import { auth } from '../../lib/auth';
+import { prisma } from '../../lib/prisma';
+import { jwtUtils } from '../../utils/jwt';
+import { tokenUtils } from '../../utils/token';
+import { IChangePasswordPayload, ILoginUserPayload, IRegisterUserPayload } from './auth.interface';
 
-export async function getCurrentUserService(req: Request) {
-  const session = await auth.api.getSession({
-    headers: req.headers as any,
-  });
+/* ── helpers ────────────────────────────────────────────────── */
+type TokenPayload = {
+  userId: string;
+  role: string;
+  name: string;
+  email: string;
+  status?: string;
+  isDeleted?: boolean;
+  emailVerified?: boolean;
+};
 
-  if (!session?.user) {
-    return null;
+const buildTokens = (p: TokenPayload) => ({
+  accessToken: tokenUtils.getAccessToken(p as JwtPayload),
+  refreshToken: tokenUtils.getRefreshToken(p as JwtPayload),
+});
+
+/* ── POST /api/v1/auth/register ─────────────────────────────── */
+const registerUser = async (payload: IRegisterUserPayload) => {
+  const { name, email, password, role } = payload;
+
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    throw new AppError(status.BAD_REQUEST, 'User already exists');
   }
 
+  // better-auth signUpEmail
+  const data = await auth.api.signUpEmail({ body: { name, email, password, role } });
+
+  if (!data.user) {
+    throw new AppError(status.BAD_REQUEST, 'Registration failed');
+  }
+
+  const { accessToken, refreshToken } = buildTokens({
+    userId: data.user.id,
+    role: data.user.role,
+    name: data.user.name,
+    email: data.user.email,
+    status: data.user.status,
+    isDeleted: data.user.isDeleted,
+    emailVerified: data.user.emailVerified,
+  });
+
+  return { user: data.user, token: data.token, accessToken, refreshToken };
+};
+
+/* ── POST /api/v1/auth/login ────────────────────────────────── */
+const loginUser = async (payload: ILoginUserPayload) => {
+  const { email, password } = payload;
+
+  const data = await auth.api.signInEmail({ body: { email, password } });
+
+  if (!data?.user) {
+    throw new AppError(status.UNAUTHORIZED, 'Invalid credentials');
+  }
+
+  if (data.user.status === UserStatus.SUSPENDED) {
+    throw new AppError(status.FORBIDDEN, 'Account is suspended');
+  }
+
+  if (data.user.isDeleted) {
+    throw new AppError(status.NOT_FOUND, 'Account not found');
+  }
+
+  const { accessToken, refreshToken } = buildTokens({
+    userId: data.user.id,
+    role: data.user.role,
+    name: data.user.name,
+    email: data.user.email,
+    status: data.user.status,
+    isDeleted: data.user.isDeleted,
+    emailVerified: data.user.emailVerified,
+  });
+
+  return { user: data.user, token: data.token, accessToken, refreshToken };
+};
+
+/* ── GET /api/v1/auth/me ────────────────────────────────────── */
+const getMe = async (userId: string) => {
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: userId },
     select: {
       id: true,
       name: true,
@@ -22,76 +97,96 @@ export async function getCurrentUserService(req: Request) {
       status: true,
       emailVerified: true,
       image: true,
+      isDeleted: true,
       createdAt: true,
-      providerProfile: true,
-
+      providerProfile: true, // Foodhub specific
     },
   });
 
+  if (!user) throw new AppError(status.NOT_FOUND, 'User not found');
   return user;
-}
-export async function updateProfileService(req: any) {
-  const user = await requireUser(req);
+};
 
-  const {
-    name,
-    email,
-    image,
-    description,
-    address,
-    phone,
-  } = req.body;
-
-  if (
-    !name &&
-    !email &&
-    !image &&
-    !description &&
-    !address &&
-    !phone
-  ) {
-    throw new Error("NO_FIELDS_TO_UPDATE");
-  }
-
-// User-level fields
-if (name || email || image) {
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      ...(name !== undefined && { name }),
-      ...(email !== undefined && { email }),
-      ...(image !== undefined && { image }),
-    },
+/* ── POST /api/v1/auth/refresh-token ────────────────────────── */
+const getNewToken = async (refreshToken: string, sessionToken: string) => {
+  const sessionExists = await prisma.session.findUnique({
+    where: { token: sessionToken },
+    include: { user: true },
   });
-}
 
+  if (!sessionExists) throw new AppError(status.UNAUTHORIZED, 'Invalid session token');
 
-  // Provider-only fields
-  if (user.role === "PROVIDER") {
-    const provider = await prisma.providerProfile.findUnique({
-      where: { userId: user.id },
+  const verified = jwtUtils.verifyToken(refreshToken, envVars.REFRESH_TOKEN_SECRET);
+  if (!verified.success) throw new AppError(status.UNAUTHORIZED, 'Invalid refresh token');
+
+  const data = verified.data as JwtPayload;
+
+  const newTokens = buildTokens({
+    userId: data.userId,
+    role: data.role,
+    name: data.name,
+    email: data.email,
+    status: data.status,
+    isDeleted: data.isDeleted,
+    emailVerified: data.emailVerified,
+  });
+
+  // Extend session lifetime
+  await prisma.session.update({
+    where: { token: sessionToken },
+    data: { expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+  });
+
+  return { ...newTokens, token: sessionToken };
+};
+
+/* ── POST /api/v1/auth/change-password ──────────────────────── */
+const changePassword = async (payload: IChangePasswordPayload, sessionToken: string) => {
+  const session = await auth.api.getSession({
+    headers: new Headers({ Authorization: `Bearer ${sessionToken}` }),
+  });
+
+  if (!session) throw new AppError(status.UNAUTHORIZED, 'Invalid session');
+
+  const { currentPassword, newPassword } = payload;
+
+  const result = await auth.api.changePassword({
+    body: { currentPassword, newPassword, revokeOtherSessions: true },
+    headers: new Headers({ Authorization: `Bearer ${sessionToken}` }),
+  });
+
+  if (session.user.needPasswordChange) {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { needPasswordChange: false },
     });
-
-    if (!provider) {
-      throw new Error("PROVIDER_PROFILE_NOT_FOUND");
-    }
-
-    if (description || address || phone) {
-      await prisma.providerProfile.update({
-        where: { userId: user.id },
-        data: {
-          ...(description !== undefined && { description }),
-          ...(address !== undefined && { address }),
-          ...(phone !== undefined && { phone }),
-        },
-      });
-    }
   }
 
-  return prisma.user.findUnique({
-    where: { id: user.id },
-    include: {
-      providerProfile: true,
-    },
+  const tokens = buildTokens({
+    userId: session.user.id,
+    role: session.user.role,
+    name: session.user.name,
+    email: session.user.email,
+    status: session.user.status,
+    isDeleted: session.user.isDeleted,
+    emailVerified: session.user.emailVerified,
   });
-}
+
+  return { ...result, ...tokens };
+};
+
+/* ── POST /api/v1/auth/logout ───────────────────────────────── */
+const logoutUser = async (sessionToken: string) => {
+  return auth.api.signOut({
+    headers: new Headers({ Authorization: `Bearer ${sessionToken}` }),
+  });
+};
+
+export const AuthService = {
+  registerUser,
+  loginUser,
+  getMe,
+  getNewToken,
+  changePassword,
+  logoutUser,
+};

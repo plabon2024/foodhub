@@ -1,67 +1,52 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import nodemailer from "nodemailer";
-import { verificationEmailTemplate } from "../emails/verificationEmail";
+import { bearer } from "better-auth/plugins";
+import { Role, UserStatus } from "../generated/prisma/enums";
+import envVars from "../config";
 import { prisma } from "./prisma";
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
-
 export const auth = betterAuth({
+  baseURL: envVars.BETTER_AUTH_URL,
+  secret: envVars.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+
   trustedOrigins: [
     "http://localhost:3000",
     "https://foodhub-frontend-sepia.vercel.app",
-    ...(process.env.APP_URL ? [process.env.APP_URL] : []),
+    ...(envVars.APP_URL ? [envVars.APP_URL] : []),
   ],
 
   user: {
     additionalFields: {
       role: {
-        type: ["CUSTOMER", "PROVIDER", "ADMIN"],
+        type: "string",
         required: true,
-        defaultValue: "CUSTOMER",
+        defaultValue: Role.CUSTOMER,
       },
       status: {
-        type: ["ACTIVE", "SUSPENDED"],
-        defaultValue: "ACTIVE",
+        type: "string",
+        required: true,
+        defaultValue: UserStatus.ACTIVE,
+      },
+      needPasswordChange: {
+        type: "boolean",
+        required: true,
+        defaultValue: false,
+      },
+      isDeleted: {
+        type: "boolean",
+        required: true,
+        defaultValue: false,
       },
     },
   },
 
   emailAndPassword: {
     enabled: true,
-    autoSignIn: false,
-    requireEmailVerification: true,
-  },
-
-  emailVerification: {
-    sendOnSignUp: true,
-    autoSignInAfterVerification: true,
-
-    sendVerificationEmail: async ({ user, url }) => {
-      await transporter.sendMail({
-        from: `"FoodHub 🍱" <${process.env.MAIL_USER}>`,
-        to: user.email,
-        subject: "Verify your FoodHub email address",
-        text: `Verify your FoodHub account: ${url}`,
-        html: verificationEmailTemplate({
-          name: user.name ?? "there",
-          verifyUrl: url,
-        }),
-      });
-    },
-
-    callbackURL: "/auth/verify",
+    autoSignIn: true,
+    requireEmailVerification: false,
   },
 
   databaseHooks: {
@@ -69,7 +54,7 @@ export const auth = betterAuth({
       create: {
         before: async (user) => {
           const allowedRole =
-            user.role === "PROVIDER" ? "PROVIDER" : "CUSTOMER";
+            user.role === Role.PROVIDER ? Role.PROVIDER : Role.CUSTOMER;
           const [firstName = null, lastName = null] =
             user.name?.split(" ") ?? [];
 
@@ -84,7 +69,7 @@ export const auth = betterAuth({
         },
 
         after: async (user) => {
-          if (user.role !== "PROVIDER") return;
+          if (user.role !== Role.PROVIDER) return;
           await prisma.providerProfile.upsert({
             where: { userId: user.id },
             create: {
@@ -97,29 +82,41 @@ export const auth = betterAuth({
       },
     },
   },
+
   session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24,     // 1 day
     cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
+      enabled: false,
     },
   },
-  cookies: {
-    namePrefix: 'better-auth',
-    attributes: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none', 
-      path: '/',
-    },
-  },
+
+  plugins: [bearer()],
+
   advanced: {
-    cookiePrefix: 'better-auth',
-    useSecureCookies: process.env.NODE_ENV === 'production',
+    cookiePrefix: "better-auth",
+    useSecureCookies: envVars.NODE_ENV === "production",
     crossSubDomainCookies: {
       enabled: false,
     },
-    disableCSRFCheck: true, 
+    disableCSRFCheck: true,
+    cookies: {
+      state: {
+        attributes: {
+          sameSite: envVars.NODE_ENV === "production" ? "none" : "lax",
+          secure: envVars.NODE_ENV === "production",
+          httpOnly: true,
+          path: "/",
+        },
+      },
+      sessionToken: {
+        attributes: {
+          sameSite: envVars.NODE_ENV === "production" ? "none" : "lax",
+          secure: envVars.NODE_ENV === "production",
+          httpOnly: true,
+          path: "/",
+        },
+      },
+    },
   },
-
-  baseURL: `${process.env.BETTER_AUTH_URL}/api/auth`,
 });

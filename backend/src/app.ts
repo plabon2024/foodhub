@@ -2,17 +2,20 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Application } from "express";
 
-import { toNodeHandler } from "better-auth/node";
-import { auth } from "./lib/auth";
 import { adminRoutes } from "./modules/admin/admin.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { mealRoutes } from "./modules/meals/meals.routes";
 import { orderRoutes } from "./modules/orders/orders.routes";
 import { providerRoutes } from "./modules/provider/provider.routes";
+import { checkAuth } from "./lib/checkAuth";
+import envVars from "./config";
+
 export const app: Application = express();
+
 const allowedOrigins = [
   "http://localhost:3000",
   "https://foodhub-frontend-sepia.vercel.app",
+  ...(envVars.APP_URL ? [envVars.APP_URL] : []),
 ];
 
 const corsOptions: cors.CorsOptions = {
@@ -28,26 +31,38 @@ const corsOptions: cors.CorsOptions = {
 
 };
 
-
-
 app.use(cors(corsOptions));
+app.options("/*splat", cors(corsOptions)); // Pre-flight for all routes
 app.use(cookieParser());
 app.use(express.json());
-app.use("/api/auth", authRouter);
-app.all("/api/auth/*splat", toNodeHandler(auth));
+
+// Auth routes (login, register, logout, me, refresh-token, change-password)
+app.use("/api/v1/auth", authRouter);
 
 // Meals & Providers (Public)
 app.use("/api", mealRoutes);
 
-// Provider Management
-app.use("/api/provider", providerRoutes);
+// Provider Management (Protected)
+app.use("/api/provider", checkAuth("PROVIDER"), providerRoutes);
 
-// Orders
-app.use("/api", orderRoutes);
+// Orders (Protected - usually needs auth, but keeping structure)
+app.use("/api/orders", checkAuth("CUSTOMER", "PROVIDER", "ADMIN"), orderRoutes);
 
-
-app.use("/api/admin", adminRoutes);
+// Admin routes (Protected)
+app.use("/api/admin", checkAuth("ADMIN"), adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("hello world");
+});
+
+// Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('API Error:', err);
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+    res.status(statusCode).json({
+        success: false,
+        message,
+        stack: envVars.NODE_ENV === 'development' ? err.stack : undefined,
+    });
 });

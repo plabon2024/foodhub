@@ -1,37 +1,34 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/lib/auth-client";
 import { useUser } from "@/lib/user-context";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
+
 export const SignOutButton = () => {
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
-  const{refetch,user}=useUser();
+  const { refetch } = useUser();
 
   async function handleClick() {
-    await signOut({
-      fetchOptions: {
-        onRequest: () => {
-          setIsPending(true);
-        },
-        onResponse: () => {
-          setIsPending(false);
-        },
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-        },
-        onSuccess: () => {
-          toast.success("You’ve logged out. See you soon!");
-          refetch()
-          router.push("/login");
+    setIsPending(true);
+    try {
+      await fetch(`${BASE_URL}/api/v1/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
 
-        },
-      },
-    });
+      await refetch();
+      toast.success("You've logged out. See you soon!");
+      router.push("/login");
+    } catch {
+      toast.error("Logout failed. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -41,7 +38,7 @@ export const SignOutButton = () => {
       variant="destructive"
       disabled={isPending}
     >
-      Sign out
+      {isPending ? "Signing out..." : "Sign out"}
     </Button>
   );
 };

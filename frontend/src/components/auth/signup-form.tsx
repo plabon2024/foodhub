@@ -28,25 +28,25 @@ type SignupPayload = {
   password: string;
   name: string;
   role: "CUSTOMER" | "PROVIDER";
-  callbackURL: string;
 };
 
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
-const API = `${baseurl}/api/auth/sign-up/email`;
+const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
 
 async function signup(payload: SignupPayload) {
-  const res = await fetch(API, {
+  const res = await fetch(`${BASE_URL}/api/v1/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(payload),
   });
 
+  const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error?.message || "Signup failed");
+    throw new Error(data?.message || "Signup failed");
   }
 
-  return res.json();
+  return data;
 }
 
 /* ----------------------------- COMPONENT ----------------------------- */
@@ -60,13 +60,10 @@ export function SignupForm({
   const mutation = useMutation({
     mutationFn: signup,
     onSuccess: () => {
-      toast.success("Registration successful!", {
-        description: "Please check your email to verify your account.",
-      });
-      // Optional: redirect after a delay
+      toast.success("Registration successful! Welcome to FoodHub.");
       setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+        window.location.href = "/";
+      }, 1500);
     },
     onError: (error: Error) => {
       toast.error("Registration failed", {
@@ -85,7 +82,6 @@ export function SignupForm({
       password: String(formData.get("password")),
       name: String(formData.get("name")),
       role,
-      callbackURL: process.env.NEXT_PUBLIC_AUTH_URL as string,
     });
   }
 

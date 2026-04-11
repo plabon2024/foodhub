@@ -7,14 +7,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { signIn } from "@/lib/auth-client";
 import { useUser } from "@/lib/user-context";
-
 import { cn } from "@/lib/utils";
-
 import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+
+const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
 
 export function LoginForm({
   className,
@@ -22,36 +21,42 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-   const { refetch, user } = useUser();
+  const { refetch } = useUser();
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
- 
+
     const formData = new FormData(e.currentTarget);
     const email = String(formData.get("email"));
     const password = String(formData.get("password"));
 
     try {
-      await signIn.email(
-        {
-          email,
-          password,
-        },
-        {
-          onRequest: () => {},
-          onResponse: () => {},
-          onError: (ctx) => {
-            toast.error(ctx.error.message);
-          },
-          onSuccess: () => {
-            refetch();
-            toast.success("Login successful. Good to have you back.");
-          },
-        },
-      );
+      const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // send & receive cookies
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg = data?.message || "Login failed";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+
+      toast.success("Login successful. Good to have you back.");
+      await refetch();
+      window.location.href = "/";
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const msg = err instanceof Error ? err.message : "An error occurred";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

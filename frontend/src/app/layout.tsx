@@ -28,7 +28,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { data: user } = await getUser();
+  let user = null;
+  try {
+    const result = await getUser();
+    user = result?.data ?? null;
+  } catch {
+    // Backend may be unavailable — render page without user
+    user = null;
+  }
   return (
     <html lang="en" suppressHydrationWarning>
       <body

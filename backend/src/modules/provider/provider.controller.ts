@@ -6,16 +6,15 @@ import {
   updateMealService,
   updateOrderStatusService
 } from "./provider.service";
-import { requireUser } from "../../lib/auth-user";
-
 export async function applyForProviderController(
   req: Request,
   res: Response
 ) {
   try {
-    const user = await requireUser(req);
+    const userId = req.user?.userId;
+    if (!userId) throw new Error("UNAUTHORIZED");
 
-    const application = await applyForProviderService(user.id);
+    const application = await applyForProviderService(userId);
 
     return res.status(201).json({
       success: true,

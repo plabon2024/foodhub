@@ -1,11 +1,9 @@
 import { prisma } from "../../lib/prisma";
-import { requireUser } from "../../lib/auth-user";
-import { requireAdmin } from "../../lib/require-admin";
 
 export async function createCategoryService(req: any) {
-  const user = await requireAdmin(req);
+  const { role } = req.user;
 
-  if (user.role !== "ADMIN") throw new Error("FORBIDDEN");
+  if (role !== "ADMIN") throw new Error("FORBIDDEN");
 
   const { name, description } = req.body;
   if (!name) throw new Error("NAME_REQUIRED");
@@ -23,8 +21,8 @@ export async function listCategoryService() {
 }
 
 export async function updateCategoryService(req: any) {
-  const user = await requireUser(req);
-  if (user.role !== "ADMIN") throw new Error("FORBIDDEN");
+  const { role } = req.user;
+  if (role !== "ADMIN") throw new Error("FORBIDDEN");
 
   const { name, description } = req.body;
   if (!name && !description) {
@@ -38,8 +36,8 @@ export async function updateCategoryService(req: any) {
 }
 
 export async function deleteCategoryService(req: any) {
-  const user = await requireUser(req);
-  if (user.role !== "ADMIN") throw new Error("FORBIDDEN");
+  const { role } = req.user;
+  if (role !== "ADMIN") throw new Error("FORBIDDEN");
 
   return prisma.category.delete({
     where: { id: req.params.id },

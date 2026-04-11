@@ -1,60 +1,126 @@
-import { Request, Response } from "express";
-import { getCurrentUserService, updateProfileService } from "./auth.service";
+import { NextFunction, Request, Response } from 'express';
+import status from 'http-status';
+import AppError from '../../utils/AppError';
+import { tokenUtils } from '../../utils/token';
+import { AuthService } from './auth.service';
 
-export async function getCurrentUserController(
-  req: Request,
-  res: Response
-) {
+/* ── POST /api/v1/auth/register ─────────────────────────────── */
+const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await getCurrentUserService(req);
+    const result = await AuthService.registerUser(req.body);
 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
+    tokenUtils.setAccessTokenCookie(res, result.accessToken);
+    tokenUtils.setRefreshTokenCookie(res, result.refreshToken);
+    tokenUtils.setBetterAuthSessionCookie(res, result.token as string);
 
-    return res.status(200).json({
+    res.status(status.CREATED).json({
       success: true,
-      data: user,
+      message: 'User registered successfully',
+      data: {
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      },
     });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch user",
-    });
-  }
-}
+  } catch (error) { next(error); }
+};
 
-
-export async function updateProfileController(
-  req: Request,
-  res: Response
-) {
+/* ── POST /api/v1/auth/login ────────────────────────────────── */
+const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const updatedUser = await updateProfileService(req);
+    const result = await AuthService.loginUser(req.body);
 
-    return res.json({
+    tokenUtils.setAccessTokenCookie(res, result.accessToken);
+    tokenUtils.setRefreshTokenCookie(res, result.refreshToken);
+    tokenUtils.setBetterAuthSessionCookie(res, result.token as string);
+
+    res.status(status.OK).json({
       success: true,
-      data: updatedUser,
+      message: 'Logged in successfully',
+      data: {
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      },
     });
-  } catch (e: any) {
-    if (e.message === "UNAUTHORIZED") {
-      return res.status(401).json({ success: false, message: e.message });
-    }
+  } catch (error) { next(error); }
+};
 
-    if (e.message === "NO_FIELDS_TO_UPDATE") {
-      return res.status(400).json({ success: false, message: e.message });
-    }
+/* ── GET /api/v1/auth/me ────────────────────────────────────── */
+const getMe = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) throw new AppError(status.UNAUTHORIZED, 'Unauthorized');
 
-    if (e.message === "PROVIDER_PROFILE_NOT_FOUND") {
-      return res.status(400).json({ success: false, message: e.message });
-    }
+    const user = await AuthService.getMe(userId);
+    res.status(status.OK).json({ success: true, data: user });
+  } catch (error) { next(error); }
+};
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update profile",
+/* ── POST /api/v1/auth/refresh-token ────────────────────────── */
+const getNewToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const refreshToken = req.cookies.refreshToken as string | undefined;
+    const sessionToken = req.cookies['better-auth.session_token'] as string | undefined;
+
+    if (!refreshToken) throw new AppError(status.UNAUTHORIZED, 'Refresh token missing');
+    if (!sessionToken) throw new AppError(status.UNAUTHORIZED, 'Session token missing');
+
+    const result = await AuthService.getNewToken(refreshToken, sessionToken);
+
+    tokenUtils.setAccessTokenCookie(res, result.accessToken);
+    tokenUtils.setRefreshTokenCookie(res, result.refreshToken);
+    tokenUtils.setBetterAuthSessionCookie(res, result.token as string);
+
+    res.status(status.OK).json({
+      success: true,
+      message: 'Tokens refreshed',
+      data: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      },
     });
-  }
-}
+  } catch (error) { next(error); }
+};
+
+/* ── POST /api/v1/auth/change-password ──────────────────────── */
+const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sessionToken = req.cookies['better-auth.session_token'] as string | undefined;
+    if (!sessionToken) throw new AppError(status.UNAUTHORIZED, 'Session token missing');
+
+    const result = await AuthService.changePassword(
+      req.body,
+      sessionToken,
+    );
+
+    tokenUtils.setAccessTokenCookie(res, result.accessToken);
+    tokenUtils.setRefreshTokenCookie(res, result.refreshToken);
+    tokenUtils.setBetterAuthSessionCookie(res, result.token as string);
+
+    res.status(status.OK).json({ success: true, message: 'Password changed successfully' });
+  } catch (error) { next(error); }
+};
+
+/* ── POST /api/v1/auth/logout ───────────────────────────────── */
+const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sessionToken = req.cookies['better-auth.session_token'] as string | undefined;
+    if (sessionToken) await AuthService.logoutUser(sessionToken);
+
+    tokenUtils.setAccessTokenCookie(res, ""); // Clear via set with ""
+    tokenUtils.setRefreshTokenCookie(res, "");
+    tokenUtils.setBetterAuthSessionCookie(res, "");
+
+    res.status(status.OK).json({ success: true, message: 'Logged out successfully' });
+  } catch (error) { next(error); }
+};
+
+export const AuthController = {
+  registerUser,
+  loginUser,
+  getMe,
+  getNewToken,
+  changePassword,
+  logoutUser,
+};
