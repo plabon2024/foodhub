@@ -18,10 +18,9 @@ import {
 import { useUser } from "@/lib/user-context";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const API_ORDERS = `${baseurl}/api/orders`;
+const API_ORDERS = `${baseurl}/orders`;
 
 
 /* ---------------- Types ---------------- */

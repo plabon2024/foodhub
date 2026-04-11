@@ -9,8 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
-const API_CATEGORIES = `${baseurl}/api/categories`;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_CATEGORIES = `${baseurl}/categories`;
 
 
 /* ---------------- Types ---------------- */

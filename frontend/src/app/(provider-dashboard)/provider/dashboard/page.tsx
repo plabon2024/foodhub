@@ -15,11 +15,10 @@ import {
 } from "@/components/ui/table";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const API_STATS = `${baseurl}/api/stats`;
-const API_ORDERS = `${baseurl}/api/orders`;
+const API_STATS = `${baseurl}/stats`;
+const API_ORDERS = `${baseurl}/orders`;
 
 
 /* ---------------- Types ---------------- */

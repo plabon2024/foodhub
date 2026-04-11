@@ -30,10 +30,9 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const API = `${baseurl}/api`;
+const API = `${baseurl}`;
 
 async function fetchMe() {
   const res = await fetch(`${API}/auth/me`, {

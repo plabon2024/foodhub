@@ -14,13 +14,13 @@ type Meal = {
   isFeatured: boolean;
   category: { name: string };
 };
-const baseUrl = process.env.NEXT_PUBLIC_AUTH_URL;
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 if (!baseUrl) {
-  throw new Error("NEXT_PUBLIC_AUTH_URL is not defined");
+  throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 }
 
-const API = `${baseUrl}/api/meals`;
+const API = `${baseUrl}/meals`;
 
 async function fetchMeals(): Promise<Meal[]> {
   const res = await fetch(API);

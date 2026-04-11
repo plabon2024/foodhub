@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const SignOutButton = () => {
   const [isPending, setIsPending] = useState(false);
@@ -16,7 +16,7 @@ export const SignOutButton = () => {
   async function handleClick() {
     setIsPending(true);
     try {
-      await fetch(`${BASE_URL}/api/v1/auth/logout`, {
+      await fetch(`${BASE_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

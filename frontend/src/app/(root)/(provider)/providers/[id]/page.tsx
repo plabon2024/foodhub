@@ -13,8 +13,8 @@ import { Card } from "@/components/ui/card";
 import { useCart } from "@/lib/cart/cart-context";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
-const API_PROVIDERS = `${baseurl}/api/providers`;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_PROVIDERS = `${baseurl}/providers`;
 
 /* ---------------- Types ---------------- */
 type ProviderDetails = {

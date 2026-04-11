@@ -40,16 +40,16 @@ app.use(express.json());
 app.use("/api/v1/auth", authRouter);
 
 // Meals & Providers (Public)
-app.use("/api", mealRoutes);
+app.use("/api/v1", mealRoutes);
 
 // Provider Management (Protected)
-app.use("/api/provider", checkAuth("PROVIDER"), providerRoutes);
+app.use("/api/v1/provider", checkAuth("PROVIDER"), providerRoutes);
 
 // Orders (Protected - usually needs auth, but keeping structure)
-app.use("/api/orders", checkAuth("CUSTOMER", "PROVIDER", "ADMIN"), orderRoutes);
+app.use("/api/v1/orders", checkAuth("CUSTOMER", "PROVIDER", "ADMIN"), orderRoutes);
 
 // Admin routes (Protected)
-app.use("/api/admin", checkAuth("ADMIN"), adminRoutes);
+app.use("/api/v1/admin", checkAuth("ADMIN"), adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("hello world");
@@ -57,9 +57,15 @@ app.get("/", (req, res) => {
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('API Error:', err);
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
+    
+    if (statusCode >= 500) {
+        console.error('API Error:', err);
+    } else {
+        console.warn(`API Warning [${req.method} ${req.originalUrl}]: ${statusCode} - ${message}`);
+    }
+
     res.status(statusCode).json({
         success: false,
         message,

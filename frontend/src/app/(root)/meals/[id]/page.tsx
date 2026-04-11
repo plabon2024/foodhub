@@ -13,10 +13,9 @@ import { useCart } from "@/lib/cart/cart-context";
 
 /* ---------------- Fetcher ---------------- */
 async function fetchMeal(id: string) {
-  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
+  const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const res = await fetch(`${baseurl}/api/meals/${id}`);
+  const res = await fetch(`${baseurl}/meals/${id}`);
 
   if (!res.ok) throw new Error("FETCH_MEAL_FAILED");
   const json = await res.json();

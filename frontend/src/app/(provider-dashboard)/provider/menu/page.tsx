@@ -32,11 +32,11 @@ import { Label } from "@/components/ui/label";
 
 /* ---------------- API ---------------- */
 
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
-const API_PROVIDER_MEALS = `${baseurl}/api/provider/meals`;
-const API_MEALS = `${baseurl}/api/meals`;
-const API_CATEGORIES = `${baseurl}/api/categories`;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+const API_PROVIDER_MEALS = `${baseurl}/provider/meals`;
+const API_MEALS = `${baseurl}/meals`;
+const API_CATEGORIES = `${baseurl}/categories`;
 /* ---------------- Types ---------------- */
 type Category = {
   id: string;

@@ -7,12 +7,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL
-;
+  const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-
-const API_LIST = `${baseurl}/api/orders`;
-const API_UPDATE = `${baseurl}/api/provider/orders`;
+const API_LIST = `${baseurl}/orders`;
+const API_UPDATE = `${baseurl}/provider/orders`;
 
 export type ProviderOrder = {
   id: string;

@@ -211,7 +211,7 @@ export async function getOrderDetailsService(req: any) {
   }
 
   // ADMIN → full access
-  if (user.role === "ADMIN") {
+  if (role === "ADMIN") {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: fullOrderInclude,

@@ -30,10 +30,10 @@ type SignupPayload = {
   role: "CUSTOMER" | "PROVIDER";
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 async function signup(payload: SignupPayload) {
-  const res = await fetch(`${BASE_URL}/api/v1/auth/register`, {
+  const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

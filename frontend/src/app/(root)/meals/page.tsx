@@ -11,9 +11,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import MealsFilters from "./MealsFilters";
 
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
-const API = `${baseurl}/api/meals`;
-const API_CATEGORIES = `${baseurl}/api/categories`;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API = `${baseurl}/meals`;
+const API_CATEGORIES = `${baseurl}/categories`;
 const LIMIT = 6;
 
 /* ---------------- Fetchers ---------------- */

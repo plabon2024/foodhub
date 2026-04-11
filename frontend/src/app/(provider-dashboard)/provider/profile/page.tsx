@@ -34,8 +34,8 @@ import {
 } from "lucide-react";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
-const API = `${baseurl}/api`;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API = `${baseurl}`;
 
 async function updateProfile(payload: Record<string, any>) {
   const res = await fetch(`${API}/auth/profile`, {

@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
-const API_PROVIDERS = `${baseurl}/api/providers`;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_PROVIDERS = `${baseurl}/providers`;
 
 /* ---------------- Fetch ---------------- */
 async function fetchProviders(): Promise<any[]> {

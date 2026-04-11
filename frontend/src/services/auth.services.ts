@@ -66,6 +66,9 @@ export async function getUserInfo() {
 
     if (!res.ok) {
       console.error('Failed to fetch user info:', res.status, res.statusText);
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        await clearAuthCookies();
+      }
       return null;
     }
 

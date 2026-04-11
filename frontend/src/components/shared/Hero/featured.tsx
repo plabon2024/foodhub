@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /* ---------------- API ---------------- */
-const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
-const API_FEATURED = `${baseurl}/api/meals?featured=true`;
+const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_FEATURED = `${baseurl}/meals?featured=true`;
 
 /* ---------------- Types ---------------- */
 type Meal = {

@@ -22,9 +22,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 /* ---------------- API ---------------- */
 async function createOrder(payload: any) {
-  const baseurl = process.env.NEXT_PUBLIC_AUTH_URL;
+  const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const res = await fetch(`${baseurl}/api/orders`, {
+  const res = await fetch(`${baseurl}/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

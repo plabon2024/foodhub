@@ -13,7 +13,7 @@ import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export function LoginForm({
   className,
@@ -33,7 +33,7 @@ export function LoginForm({
     const password = String(formData.get("password"));
 
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // send & receive cookies

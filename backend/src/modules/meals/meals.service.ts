@@ -222,6 +222,10 @@ export async function getProviderWithMenuService(providerId: string) {
 }
 
 export async function getStatsService(req: any) {
+  if (!req.user) {
+    throw new Error("UNAUTHORIZED");
+  }
+
   const { userId, role } = req.user;
 
   // 🔒 CUSTOMER not allowed
@@ -250,6 +254,7 @@ export async function getStatsService(req: any) {
       totalOrders,
       ordersByStatus,
       revenue,
+      activeSessions,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: "CUSTOMER" } }),
@@ -275,6 +280,9 @@ export async function getStatsService(req: any) {
       prisma.order.aggregate({
         where: { status: "DELIVERED" },
         _sum: { totalAmount: true },
+      }),
+      prisma.session.count({
+        where: { expiresAt: { gt: new Date() } }
       }),
     ]);
 
@@ -309,6 +317,7 @@ export async function getStatsService(req: any) {
         }, {}),
         revenue: revenue._sum.totalAmount ?? "0.00",
       },
+      activeSessions,
     };
   }
 
