@@ -28,7 +28,10 @@ import {
   User
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import UploadImage from "@/components/imageupload/UploadImage";
+import { toast } from "sonner";
+import Image from "next/image";
 
 const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -75,13 +78,38 @@ export default function ProfilePage() {
 
   const updateMutation = useMutation({
     mutationFn: updateProfile,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["me"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success("Profile updated successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update profile");
+    }
   });
 
   const applyMutation = useMutation({
     mutationFn: applyForProvider,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["me"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success("Application submitted successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to submit application");
+    }
   });
+
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        description: user.providerProfile?.description || "",
+        address: user.providerProfile?.address || "",
+        phone: user.providerProfile?.phone || "",
+      });
+    }
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -93,8 +121,9 @@ export default function ProfilePage() {
     );
   }
   const router = useRouter();
-  if (!user || user.role !== "CUSTOMER") {
-    router.push("/");
+  if (!user) {
+    router.push("/auth/login");
+    return null;
   }
   return (
     <div className="mx-auto max-w-5xl container space-y-8 p-6">
@@ -102,11 +131,26 @@ export default function ProfilePage() {
       <Card className="border-none shadow-lg ">
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-2 ring-blue-500/20">
-              <AvatarFallback className="text-3xl font-bold ">
-                {user.name?.[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-2 ring-blue-500/20 overflow-hidden">
+                {form.image ? (
+                  <Image 
+                    src={form.image} 
+                    alt={user.name} 
+                    width={96} 
+                    height={96} 
+                    className="object-cover h-full w-full"
+                  />
+                ) : (
+                  <AvatarFallback className="text-3xl font-bold">
+                    {user.name?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="mt-4">
+                <UploadImage onUpload={(url) => setForm({ ...form, image: url })} />
+              </div>
+            </div>
 
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-3xl font-bold mb-2 ">{user.name}</h1>
@@ -158,7 +202,7 @@ export default function ProfilePage() {
             </Label>
             <Input
               id="name"
-              defaultValue={user.name}
+              value={form.name || ""}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="transition-all focus:ring-2 focus:ring-blue-500"
             />
@@ -174,9 +218,9 @@ export default function ProfilePage() {
             </Label>
             <Input
               id="email"
-              defaultValue={user.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="transition-all focus:ring-2 focus:ring-blue-500"
+              value={user.email}
+              disabled
+              className="bg-gray-50 dark:bg-gray-800"
             />
           </div>
 
@@ -230,7 +274,7 @@ export default function ProfilePage() {
               <Textarea
                 id="description"
                 placeholder="Tell customers about your services..."
-                defaultValue={user.providerProfile.description ?? ""}
+                value={form.description || ""}
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
                 }
@@ -250,7 +294,7 @@ export default function ProfilePage() {
                 <Input
                   id="address"
                   placeholder="Enter your business address"
-                  defaultValue={user.providerProfile.address ?? ""}
+                  value={form.address || ""}
                   onChange={(e) =>
                     setForm({ ...form, address: e.target.value })
                   }
@@ -269,7 +313,7 @@ export default function ProfilePage() {
                 <Input
                   id="phone"
                   placeholder="Enter your contact number"
-                  defaultValue={user.providerProfile.phone ?? ""}
+                  value={form.phone || ""}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   className="transition-all focus:ring-2 focus:ring-blue-500"
                 />

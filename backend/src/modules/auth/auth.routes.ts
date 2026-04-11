@@ -19,6 +19,9 @@ router.post('/refresh-token', AuthController.getNewToken);
 // POST /api/v1/auth/change-password  (protected)
 router.post('/change-password', checkAuth('CUSTOMER', 'PROVIDER', 'ADMIN'), AuthController.changePassword);
 
+// PATCH /api/v1/auth/profile  (protected)
+router.patch('/profile', checkAuth('CUSTOMER', 'PROVIDER', 'ADMIN'), AuthController.updateProfile);
+
 // POST /api/v1/auth/logout  (protected)
 router.post('/logout', checkAuth('CUSTOMER', 'PROVIDER', 'ADMIN'), AuthController.logoutUser);
 

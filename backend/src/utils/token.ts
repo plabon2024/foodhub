@@ -51,10 +51,17 @@ const setBetterAuthSessionCookie = (res: Response, token: string) => {
   });
 };
 
+const clearAuthCookies = (res: Response) => {
+  CookieUtils.clearCookie(res, "accessToken", cookieBaseOptions);
+  CookieUtils.clearCookie(res, "refreshToken", cookieBaseOptions);
+  CookieUtils.clearCookie(res, "better-auth.session_token", cookieBaseOptions);
+};
+
 export const tokenUtils = {
   getAccessToken,
   getRefreshToken,
   setAccessTokenCookie,
   setRefreshTokenCookie,
   setBetterAuthSessionCookie,
+  clearAuthCookies,
 };

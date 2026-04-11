@@ -102,15 +102,28 @@ const changePassword = async (req: Request, res: Response, next: NextFunction) =
   } catch (error) { next(error); }
 };
 
+/* ── PATCH /api/v1/auth/profile ─────────────────────────────── */
+const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) throw new AppError(status.UNAUTHORIZED, 'Unauthorized');
+
+    const result = await AuthService.updateProfile(userId, req.body);
+    res.status(status.OK).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: result,
+    });
+  } catch (error) { next(error); }
+};
+
 /* ── POST /api/v1/auth/logout ───────────────────────────────── */
 const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sessionToken = req.cookies['better-auth.session_token'] as string | undefined;
     if (sessionToken) await AuthService.logoutUser(sessionToken);
 
-    tokenUtils.setAccessTokenCookie(res, ""); // Clear via set with ""
-    tokenUtils.setRefreshTokenCookie(res, "");
-    tokenUtils.setBetterAuthSessionCookie(res, "");
+    tokenUtils.clearAuthCookies(res);
 
     res.status(status.OK).json({ success: true, message: 'Logged out successfully' });
   } catch (error) { next(error); }
@@ -122,5 +135,6 @@ export const AuthController = {
   getMe,
   getNewToken,
   changePassword,
+  updateProfile,
   logoutUser,
 };

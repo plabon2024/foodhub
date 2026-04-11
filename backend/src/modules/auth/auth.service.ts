@@ -7,7 +7,7 @@ import { auth } from '../../lib/auth';
 import { prisma } from '../../lib/prisma';
 import { jwtUtils } from '../../utils/jwt';
 import { tokenUtils } from '../../utils/token';
-import { IChangePasswordPayload, ILoginUserPayload, IRegisterUserPayload } from './auth.interface';
+import { IChangePasswordPayload, ILoginUserPayload, IRegisterUserPayload, IUpdateProfilePayload } from './auth.interface';
 
 /* ── helpers ────────────────────────────────────────────────── */
 type TokenPayload = {
@@ -175,8 +175,53 @@ const changePassword = async (payload: IChangePasswordPayload, sessionToken: str
   return { ...result, ...tokens };
 };
 
+/* ── PATCH /api/v1/auth/profile ─────────────────────────────── */
+const updateProfile = async (userId: string, payload: IUpdateProfilePayload) => {
+  const { name, image, description, address, phone } = payload;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { providerProfile: true },
+  });
+
+  if (!user) throw new AppError(status.NOT_FOUND, "User not found");
+
+  // Update user basic info
+  // Building user update data conditionally
+  const userUpdateData: any = {};
+  if (name !== undefined) userUpdateData.name = name;
+  if (image !== undefined) userUpdateData.image = image;
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: userUpdateData,
+  });
+
+  // Update provider profile if exists and user is provider
+  if (user.role === "PROVIDER" && user.providerProfile) {
+    const profileUpdateData: any = {};
+    if (description !== undefined) profileUpdateData.description = description;
+    if (address !== undefined) profileUpdateData.address = address;
+    if (phone !== undefined) profileUpdateData.phone = phone;
+
+    if (Object.keys(profileUpdateData).length > 0) {
+      await prisma.providerProfile.update({
+        where: { userId },
+        data: profileUpdateData,
+      });
+    }
+  }
+
+  return updatedUser;
+};
+
 /* ── POST /api/v1/auth/logout ───────────────────────────────── */
 const logoutUser = async (sessionToken: string) => {
+  // Explicitly destroy session in DB
+  await prisma.session.deleteMany({
+    where: { token: sessionToken }
+  });
+
   return auth.api.signOut({
     headers: new Headers({ Authorization: `Bearer ${sessionToken}` }),
   });
@@ -188,5 +233,6 @@ export const AuthService = {
   getMe,
   getNewToken,
   changePassword,
+  updateProfile,
   logoutUser,
 };
