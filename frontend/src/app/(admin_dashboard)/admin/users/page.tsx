@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   Loader2, 
@@ -19,8 +20,12 @@ import {
   Shield, 
   UserCircle,
   MoreVertical,
-  Clock
+  Clock,
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import AdminProviderApplicationsPage from "./Application";
 import { cn } from "@/lib/utils";
@@ -39,11 +44,17 @@ export type User = {
   createdAt: string;
 };
 
-async function fetchUsers(): Promise<User[]> {
-  const res = await fetch(API_BASE, { credentials: "include" });
+async function fetchUsers(page = 1, search = ""): Promise<{ data: User[]; meta: any }> {
+  const url = new URL(API_BASE);
+  url.searchParams.append("page", page.toString());
+  url.searchParams.append("limit", "10");
+  if (search) {
+    url.searchParams.append("search", search);
+  }
+
+  const res = await fetch(url.toString(), { credentials: "include" });
   if (!res.ok) throw new Error("FETCH_FAILED");
-  const json = await res.json();
-  return json.data;
+  return res.json();
 }
 
 async function updateUserStatus({
@@ -66,11 +77,26 @@ async function updateUserStatus({
 
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: fetchUsers,
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const { data: result, isLoading } = useQuery({
+    queryKey: ["admin-users", page, search],
+    queryFn: () => fetchUsers(page, search),
   });
+
+  const users = result?.data;
+  const meta = result?.meta;
 
   const mutation = useMutation({
     mutationFn: updateUserStatus,
@@ -97,6 +123,19 @@ export default function AdminUsersPage() {
           </div>
           <div className="bg-primary/10 p-3 rounded-2xl text-primary border border-primary/20 shadow-sm">
             <Shield className="w-6 h-6" />
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative z-10 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search users by name or email..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-10 h-11 bg-background/50 border-border/50 rounded-xl focus:ring-primary/20 transition-all"
+            />
           </div>
         </div>
 
@@ -217,6 +256,51 @@ export default function AdminUsersPage() {
             </Table>
           )}
         </div>
+
+        {/* Pagination */}
+        {meta && meta.totalPages > 1 && (
+          <div className="flex items-center justify-between relative z-10 px-2 pt-4 border-t border-border/20">
+            <p className="text-xs font-medium text-muted-foreground">
+              Showing <span className="text-foreground">{(meta.page - 1) * meta.limit + 1}</span> to <span className="text-foreground">{Math.min(meta.page * meta.limit, meta.total)}</span> of <span className="text-foreground">{meta.total}</span> users
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-xl border-border/50 bg-background/50"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={meta.page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-1 mx-2">
+                {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(p => (
+                   <Button
+                    key={p}
+                    variant={meta.page === p ? "default" : "outline"}
+                    size="sm"
+                    className={cn(
+                      "h-9 w-9 rounded-xl text-xs font-bold transition-all",
+                      meta.page === p ? "shadow-md shadow-primary/20" : "border-border/50 bg-background/50"
+                    )}
+                    onClick={() => setPage(p)}
+                  >
+                    {p}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-xl border-border/50 bg-background/50"
+                onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                disabled={meta.page === meta.totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">

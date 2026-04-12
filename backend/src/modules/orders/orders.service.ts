@@ -10,7 +10,7 @@ export async function createOrderService(req: any) {
 
   // Check user status directly from DB if needed, or assume checkAuth did it.
   // checkAuth already checks for SUSPENDED status.
-  
+
   const { providerId, deliveryAddress, items } = req.body;
 
   if (!providerId || !deliveryAddress || !items?.length) {

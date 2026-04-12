@@ -42,6 +42,25 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [address, setAddress] = useState("");
+  const [addressError, setAddressError] = useState("");
+
+  useEffect(() => {
+    if (address && address.trim().length < 10) {
+      setAddressError("Address must be at least 10 characters long");
+    } else {
+      setAddressError("");
+    }
+  }, [address]);
+
+  const mutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: () => {
+      toast.success("Order placed (Cash on Delivery)");
+      clear();
+      router.push("/orders");
+    },
+    onError: () => toast.error("Failed to place order"),
+  });
 
   /* -------- Auth Guard -------- */
   useEffect(() => {
@@ -81,15 +100,7 @@ export default function CheckoutPage() {
     0
   );
 
-  const mutation = useMutation({
-    mutationFn: createOrder,
-    onSuccess: () => {
-      toast.success("Order placed (Cash on Delivery)");
-      clear();
-      router.push("/orders");
-    },
-    onError: () => toast.error("Failed to place order"),
-  });
+
 
   /* -------- UI -------- */
   return (
@@ -133,11 +144,17 @@ export default function CheckoutPage() {
       </div>
 
       {/* Address */}
-      <Textarea
-        placeholder="Delivery address"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-      />
+      <div className="space-y-2">
+        <Textarea
+          placeholder="Delivery address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          className={addressError ? "border-destructive" : ""}
+        />
+        {addressError && (
+          <p className="text-xs font-medium text-destructive">{addressError}</p>
+        )}
+      </div>
 
       {/* Payment */}
       <div className="text-sm text-muted-foreground">
@@ -147,7 +164,7 @@ export default function CheckoutPage() {
       {/* Place Order */}
       <Button
         className="w-full"
-        disabled={!address || mutation.isPending}
+        disabled={!address || !!addressError || mutation.isPending}
         onClick={() =>
           mutation.mutate({
             providerId,

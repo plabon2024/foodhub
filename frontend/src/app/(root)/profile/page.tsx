@@ -52,8 +52,9 @@ async function updateProfile(payload: any) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Update failed");
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Update failed");
+  return data;
 }
 
 async function applyForProvider() {
@@ -111,6 +112,16 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  const handleSave = () => {
+    if (user.role === "PROVIDER") {
+      if (form.phone && !/^\d{11}$/.test(form.phone)) {
+        toast.error("Invalid phone number. Must be 11 digits.");
+        return;
+      }
+    }
+    updateMutation.mutate(form);
+  };
+
   if (isLoading) {
     return (
       <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -134,11 +145,11 @@ export default function ProfilePage() {
             <div className="relative group">
               <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-2 ring-blue-500/20 overflow-hidden">
                 {form.image ? (
-                  <Image 
-                    src={form.image} 
-                    alt={user.name} 
-                    width={96} 
-                    height={96} 
+                  <Image
+                    src={form.image}
+                    alt={user.name}
+                    width={96}
+                    height={96}
                     className="object-cover h-full w-full"
                   />
                 ) : (
@@ -312,9 +323,10 @@ export default function ProfilePage() {
                 </Label>
                 <Input
                   id="phone"
+                  type="tel"
                   placeholder="Enter your contact number"
                   value={form.phone || ""}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 11) })}
                   className="transition-all focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -328,7 +340,7 @@ export default function ProfilePage() {
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-4 pb-8">
         <Button
-          onClick={() => updateMutation.mutate(form)}
+          onClick={handleSave}
           disabled={updateMutation.isPending}
           size="sm"
           className="px-6 py-2  shadow-lg hover:shadow-xl transition-all"
@@ -339,16 +351,30 @@ export default function ProfilePage() {
         <SignOutButton />
 
         {user.role === "CUSTOMER" && (
-          <Button
-            variant="outline"
-            onClick={() => applyMutation.mutate()}
-            disabled={applyMutation.isPending}
-            className="px-6 py-2 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 shadow-md hover:shadow-lg transition-all"
-            size="sm"
-          >
-            <Briefcase className="w-4 h-4 mr-2" />
-            {applyMutation.isPending ? "Applying..." : "Apply for Provider"}
-          </Button>
+          <div className="flex items-center gap-4">
+            {user.providerApplication ? (
+              <div className="flex flex-col gap-1">
+                <Badge variant="outline" className="px-4 py-2 border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20">
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  Application Status: {user.providerApplication.status}
+                </Badge>
+                <p className="text-xs text-gray-500 ml-1">
+                  Your request to become a provider is being reviewed.
+                </p>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => applyMutation.mutate()}
+                disabled={applyMutation.isPending}
+                className="px-6 py-2 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 shadow-md hover:shadow-lg transition-all"
+                size="sm"
+              >
+                <Briefcase className="w-4 h-4 mr-2" />
+                {applyMutation.isPending ? "Applying..." : "Apply for Provider"}
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>

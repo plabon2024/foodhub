@@ -1,24 +1,53 @@
 import { prisma } from "../../lib/prisma";
 
 export async function getAllUsersService(req: any) {
-  return prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      status: true,
-      emailVerified: true,
-      createdAt: true,
-      providerProfile: {
-        select: {
-          id: true,
-          isActive: true,
+  const { search, page = 1, limit = 10 } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
+  const take = Number(limit);
+
+  const where: any = {};
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const [users, total] = await prisma.$transaction([
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+        emailVerified: true,
+        createdAt: true,
+        providerProfile: {
+          select: {
+            id: true,
+            isActive: true,
+          },
         },
       },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    data: users,
+    meta: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / take),
     },
-  });
+  };
 }
 
 

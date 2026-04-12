@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCart } from "@/lib/cart/cart-context";
+import { useUser } from "@/lib/user-context";
 
 /* ---------------- Fetcher ---------------- */
 async function fetchMeal(id: string) {
@@ -27,6 +28,7 @@ export default function MealDetailsPage() {
   const id = params.id as string;
   const router = useRouter();
   const { add } = useCart();
+  const { user } = useUser();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["meal", id],
@@ -63,6 +65,11 @@ export default function MealDetailsPage() {
   function handleAddToCart() {
     if (!data.isAvailable) {
       toast.error("This meal is currently unavailable");
+      return;
+    }
+
+    if (user && user.role !== "CUSTOMER") {
+      toast.error("Only customers can add items to cart");
       return;
     }
 
@@ -166,17 +173,19 @@ export default function MealDetailsPage() {
 
             <Button
               onClick={handleAddToCart}
-              disabled={!data.isAvailable}
+              disabled={!data.isAvailable || (!!user && user.role !== "CUSTOMER")}
               size="lg"
               className="w-full"
             >
-              {data.isAvailable ? (
+              {!data.isAvailable ? (
+                "Currently Unavailable"
+              ) : user && user.role !== "CUSTOMER" ? (
+                "Only Customers Can Order"
+              ) : (
                 <>
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Add to Cart
                 </>
-              ) : (
-                "Currently Unavailable"
               )}
             </Button>
 

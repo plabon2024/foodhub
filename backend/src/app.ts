@@ -7,6 +7,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { mealRoutes } from "./modules/meals/meals.routes";
 import { orderRoutes } from "./modules/orders/orders.routes";
 import { providerRoutes } from "./modules/provider/provider.routes";
+import { applyForProviderController } from "./modules/provider/provider.controller";
 import { checkAuth } from "./lib/checkAuth";
 import envVars from "./config";
 
@@ -42,7 +43,8 @@ app.use("/api/v1/auth", authRouter);
 // Meals & Providers (Public)
 app.use("/api/v1", mealRoutes);
 
-// Provider Management (Protected)
+// Provider Management (Restricted to PROVIDER)
+app.post("/api/v1/provider/apply", checkAuth("CUSTOMER"), applyForProviderController);
 app.use("/api/v1/provider", checkAuth("PROVIDER"), providerRoutes);
 
 // Orders (Protected - usually needs auth, but keeping structure)

@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 import { useCart } from "@/lib/cart/cart-context";
 
@@ -17,6 +19,12 @@ export default function CartPage() {
   
   const { user, isPending } = useUser();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (isPending) return;
 
@@ -26,10 +34,16 @@ export default function CartPage() {
   }, [user, isPending, router]);
 
  
-  if (isPending) {
+  if (isPending || !mounted) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="mx-auto max-w-4xl space-y-6 p-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="space-y-4">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+        <Skeleton className="h-10 w-full" />
       </div>
     );
   }

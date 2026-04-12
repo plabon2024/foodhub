@@ -99,7 +99,8 @@ const getMe = async (userId: string) => {
       image: true,
       isDeleted: true,
       createdAt: true,
-      providerProfile: true, // Foodhub specific
+      providerProfile: true,
+      providerApplication: true,
     },
   });
 
@@ -202,7 +203,12 @@ const updateProfile = async (userId: string, payload: IUpdateProfilePayload) => 
     const profileUpdateData: any = {};
     if (description !== undefined) profileUpdateData.description = description;
     if (address !== undefined) profileUpdateData.address = address;
-    if (phone !== undefined) profileUpdateData.phone = phone;
+    if (phone !== undefined) {
+      if (phone !== "" && !/^\d{11}$/.test(phone)) {
+        throw new AppError(status.BAD_REQUEST, "Invalid phone number. Must be 11 digits.");
+      }
+      profileUpdateData.phone = phone;
+    }
 
     if (Object.keys(profileUpdateData).length > 0) {
       await prisma.providerProfile.update({

@@ -45,8 +45,9 @@ async function updateProfile(payload: Record<string, any>) {
     body: JSON.stringify(payload),
   });
 
-  if (!res.ok) throw new Error("UPDATE_FAILED");
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "UPDATE_FAILED");
+  return data;
 }
 
 export default function ProviderProfilePage() {
@@ -78,7 +79,7 @@ export default function ProviderProfilePage() {
       toast.success("Profile updated");
       refetch();
     },
-    onError: () => toast.error("Failed to update profile"),
+    onError: (error: any) => toast.error(error.message || "Failed to update profile"),
   });
 
   /* ---------------- Guard ---------------- */
@@ -112,6 +113,10 @@ export default function ProviderProfilePage() {
     }
 
     if (form.phone !== user.providerProfile?.phone) {
+      if (form.phone && !/^\d{11}$/.test(form.phone)) {
+        toast.error("Invalid phone number. Must be 11 digits.");
+        return;
+      }
       payload.phone = form.phone;
     }
 
@@ -216,10 +221,13 @@ export default function ProviderProfilePage() {
                 Phone
               </Label>
               <Input
+                type="tel"
+                placeholder="Enter your contact number"
                 value={form.phone}
                 onChange={(e) =>
-                  setForm((p) => ({ ...p, phone: e.target.value }))
+                  setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 11) }))
                 }
+                className="transition-all focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>

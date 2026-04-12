@@ -4,8 +4,8 @@ import { approveProviderApplication, getAllProviderApplicationsService, getAllUs
 
 export async function getAllUsersController(req: Request, res: Response) {
   try {
-    const users = await getAllUsersService(req);
-    res.json({ success: true, data: users });
+    const result = await getAllUsersService(req);
+    res.json({ success: true, ...result });
   } catch (e: any) {
     if (e.message === "UNAUTHORIZED") {
       return res.status(401).json({ success: false, message: e.message });

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -58,7 +59,7 @@ export default function OrdersPage() {
     }
   }, [user, isPending, router]);
 
- 
+
   if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -80,6 +81,22 @@ export default function OrdersPage() {
     queryFn: fetchOrders,
     enabled: user?.role === "CUSTOMER",
   });
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6 mx-auto max-w-8xl container">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-64" />
+        <div className="space-y-4 pt-6">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
+    );
+  }
 
 
 
@@ -108,58 +125,58 @@ export default function OrdersPage() {
           You haven’t placed any orders yet.
         </div>
       ) : (
-       <Table>
-  <TableHeader>
-    <TableRow>
-      <TableHead className="p-6">Order</TableHead>
-      <TableHead className="p-6">Status</TableHead>
-      <TableHead className="p-6">Provider</TableHead>
-      <TableHead className="p-6">Total</TableHead>
-      <TableHead className="p-6">Items</TableHead>
-      <TableHead className="p-6">Created</TableHead>
-      <TableHead className="p-6 text-right">View</TableHead>
-    </TableRow>
-  </TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="p-6">Order</TableHead>
+              <TableHead className="p-6">Status</TableHead>
+              <TableHead className="p-6">Provider</TableHead>
+              <TableHead className="p-6">Total</TableHead>
+              <TableHead className="p-6">Items</TableHead>
+              <TableHead className="p-6">Created</TableHead>
+              <TableHead className="p-6 text-right">View</TableHead>
+            </TableRow>
+          </TableHeader>
 
-  <TableBody>
-    {orders.map((order) => (
-      <TableRow key={order.id}>
-        <TableCell className="p-6 font-mono text-xs">
-          {order.id.slice(0, 8)}…
-        </TableCell>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell className="p-6 font-mono text-xs">
+                  {order.id.slice(0, 8)}…
+                </TableCell>
 
-        <TableCell className="p-6">
-          <Badge>{order.status}</Badge>
-        </TableCell>
+                <TableCell className="p-6">
+                  <Badge>{order.status}</Badge>
+                </TableCell>
 
-        <TableCell className="p-6">
-          {order.provider?.name ?? "Unknown Provider"}
-        </TableCell>
+                <TableCell className="p-6">
+                  {order.provider?.name ?? "Unknown Provider"}
+                </TableCell>
 
-        <TableCell className="p-6">
-          ৳{order.totalAmount}
-        </TableCell>
+                <TableCell className="p-6">
+                  ৳{order.totalAmount}
+                </TableCell>
 
-        <TableCell className="p-6">
-          {order.items?.length ?? 0}
-        </TableCell>
+                <TableCell className="p-6">
+                  {order.items?.length ?? 0}
+                </TableCell>
 
-        <TableCell className="p-6">
-          {new Date(order.createdAt).toLocaleString()}
-        </TableCell>
+                <TableCell className="p-6">
+                  {new Date(order.createdAt).toLocaleString()}
+                </TableCell>
 
-        <TableCell className="p-6 text-right">
-          <Link
-            href={`/orders/${order.id}`}
-            className="text-primary hover:underline text-sm"
-          >
-            View
-          </Link>
-        </TableCell>
-      </TableRow>
-    ))}
-  </TableBody>
-</Table>
+                <TableCell className="p-6 text-right">
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="text-primary hover:underline text-sm"
+                  >
+                    View
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
       )}
     </div>
