@@ -52,9 +52,8 @@ async function updateProfile(payload: any) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Update failed");
-  return data;
+  if (!res.ok) throw new Error("Update failed");
+  return res.json();
 }
 
 async function applyForProvider() {
@@ -324,7 +323,7 @@ export default function ProfilePage() {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="Enter your contact number"
+                  placeholder="Enter your contact number "
                   value={form.phone || ""}
                   onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 11) })}
                   className="transition-all focus:ring-2 focus:ring-blue-500"

@@ -11,11 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { 
-  CheckCircle, 
-  Loader2, 
-  UserPlus, 
-  History, 
+import {
+  CheckCircle,
+  Loader2,
+  UserPlus,
+  History,
   ChevronRight,
   Mail,
   User,
@@ -83,7 +83,7 @@ export default function AdminProviderApplicationsPage() {
   return (
     <div className="p-6 md:p-8 space-y-8 bg-card/30 backdrop-blur-md rounded-3xl border border-border/50 shadow-xl overflow-hidden relative">
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -ml-32 -mb-32" />
-      
+
       <div className="flex items-center justify-between relative z-10">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Onboarding Requests</h1>
@@ -130,7 +130,7 @@ export default function AdminProviderApplicationsPage() {
                     <TableCell className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center text-accent border border-accent/10 shadow-sm overflow-hidden ring-2 ring-background">
-                            <User className="w-5 h-5" />
+                          <User className="w-5 h-5" />
                         </div>
                         <div>
                           <p className="font-bold text-sm tracking-tight">{app.user.name}</p>
@@ -146,7 +146,7 @@ export default function AdminProviderApplicationsPage() {
                           ROLE: {app.user.role}
                         </Badge>
                         <p className="text-[10px] text-muted-foreground flex items-center">
-                           <ChevronRight className="w-3 h-3 mr-0.5 text-primary" /> Account Status: {app.user.status}
+                          <ChevronRight className="w-3 h-3 mr-0.5 text-primary" /> Account Status: {app.user.status}
                         </p>
                       </div>
                     </TableCell>
@@ -154,8 +154,8 @@ export default function AdminProviderApplicationsPage() {
                       <Badge className={cn(
                         "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest border shadow-sm",
                         app.status === "PENDING" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
-                        app.status === "APPROVED" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
-                        "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                          app.status === "APPROVED" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                            "bg-rose-500/10 text-rose-600 border-rose-500/20"
                       )}>
                         {app.status}
                       </Badge>
@@ -178,14 +178,14 @@ export default function AdminProviderApplicationsPage() {
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <div className="flex items-center gap-1.5">
-                              <CheckCircle className="h-4 w-4" /> Provision
+                              <CheckCircle className="h-4 w-4" /> APPROVE
                             </div>
                           )}
                         </Button>
                       )}
                       {app.status === "APPROVED" && (
                         <div className="flex items-center justify-end text-emerald-500 font-bold text-xs">
-                           <CheckCircle className="w-4 h-4 mr-1.5" /> PROVISIONED
+                          <CheckCircle className="w-4 h-4 mr-1.5" /> APPROVED
                         </div>
                       )}
                     </TableCell>

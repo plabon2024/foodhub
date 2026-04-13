@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 /* ---------------- API ---------------- */
 const baseurl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_FEATURED = `${baseurl}/meals?featured=true`;
+const API_ALL = `${baseurl}/meals?available=true`;
 
 /* ---------------- Types ---------------- */
 type Meal = {
@@ -24,11 +25,26 @@ type Meal = {
   isAvailable?: boolean;
 };
 
-/* ---------------- Fetcher ---------------- */
+/* ---------------- Fetcher (featured → fallback all) ---------------- */
 async function fetchFeaturedMeals(): Promise<Meal[]> {
-  const res = await fetch(API_FEATURED);
-  if (!res.ok) throw new Error("FETCH_FEATURED_FAILED");
-  return (await res.json()).data.items;
+  // Try featured first
+  try {
+    const resFeatured = await fetch(API_FEATURED);
+    if (resFeatured.ok) {
+      const json = await resFeatured.json();
+      const featured: Meal[] = json.data?.items ?? [];
+      if (featured.length > 0) return featured.slice(0, 6);
+    }
+  } catch {
+    // ignore, fall through to fallback
+  }
+
+  // Fallback: latest available meals (up to 6)
+  const resAll = await fetch(API_ALL);
+  if (!resAll.ok) throw new Error("FETCH_MEALS_FAILED");
+  const json = await resAll.json();
+  const all: Meal[] = json.data?.items ?? [];
+  return all.slice(0, 6);
 }
 
 /* ---------------- Section ---------------- */
@@ -38,7 +54,8 @@ export default function FeaturedMealsSection() {
     queryFn: fetchFeaturedMeals,
   });
 
-  if (!isLoading && !meals?.length) return null;
+  // Only hide if loading is done AND we genuinely have no meals at all
+  if (!isLoading && (!meals || meals.length === 0)) return null;
 
   return (
     <>

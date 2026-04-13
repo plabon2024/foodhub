@@ -15,28 +15,50 @@ import { toast } from "sonner";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+const QUICK_LOGINS = [
+  {
+    label: "Admin",
+    email: "admin@gmail.com",
+    password: "@123ADMINadmin",
+    color: "bg-red-500/10 hover:bg-red-500/20 text-red-600 border-red-200",
+    dot: "bg-red-500",
+  },
+  {
+    label: "Provider",
+    email: "provider@gmail.com",
+    password: "@123providerPROVIDER",
+    color: "bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border-blue-200",
+    dot: "bg-blue-500",
+  },
+  {
+    label: "Customer",
+    email: "customer@gmail.com",
+    password: "@123customerCUSTOMER",
+    color: "bg-green-500/10 hover:bg-green-500/20 text-green-600 border-green-200",
+    dot: "bg-green-500",
+  },
+];
+
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [emailVal, setEmailVal] = useState("");
+  const [passwordVal, setPasswordVal] = useState("");
   const { refetch } = useUser();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  /* ─── helpers ─── */
+  const performLogin = async (email: string, password: string) => {
     setIsLoading(true);
     setError("");
-
-    const formData = new FormData(e.currentTarget);
-    const email = String(formData.get("email"));
-    const password = String(formData.get("password"));
 
     try {
       const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // send & receive cookies
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -52,7 +74,6 @@ export function LoginForm({
       toast.success("Login successful. Good to have you back.");
       await refetch();
       window.location.href = "/";
-
     } catch (err) {
       const msg = err instanceof Error ? err.message : "An error occurred";
       setError(msg);
@@ -60,6 +81,18 @@ export function LoginForm({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await performLogin(emailVal, passwordVal);
+  };
+
+  const handleQuickLogin = (email: string, password: string) => {
+    setEmailVal(email);
+    setPasswordVal(password);
+    toast.info(`Logging in as ${email}…`);
+    performLogin(email, password);
   };
 
   return (
@@ -74,6 +107,35 @@ export function LoginForm({
           <p className="text-muted-foreground text-sm">
             Enter your email below to login to your account
           </p>
+        </div>
+
+        {/* ─── Quick Login Buttons ─── */}
+        <div className="space-y-2">
+          <p className="text-xs text-center text-muted-foreground font-medium tracking-wide uppercase">
+            Quick Login
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {QUICK_LOGINS.map(({ label, email, password, color, dot }) => (
+              <button
+                key={label}
+                type="button"
+                disabled={isLoading}
+                onClick={() => handleQuickLogin(email, password)}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all duration-200 disabled:opacity-50 cursor-pointer",
+                  color
+                )}
+              >
+                <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 pt-1">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or fill manually</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
         </div>
 
         {error && (
@@ -91,6 +153,8 @@ export function LoginForm({
             placeholder="m@example.com"
             required
             disabled={isLoading}
+            value={emailVal}
+            onChange={(e) => setEmailVal(e.target.value)}
           />
         </Field>
 
@@ -110,6 +174,8 @@ export function LoginForm({
             type="password"
             required
             disabled={isLoading}
+            value={passwordVal}
+            onChange={(e) => setPasswordVal(e.target.value)}
           />
         </Field>
 
