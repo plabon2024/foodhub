@@ -1,90 +1,211 @@
-# foodhub-backend
+# 🔧 FoodHub — Backend
 
-## Overview
-A Node.js/Express backend for FoodHub, a marketplace for users, providers, and orders. The API provides public meal browsing, user profile management, order placement, provider workflows, and admin category/user/provider-application management.
+The FoodHub backend is a RESTful API built with **Express.js 5** and **TypeScript**. It handles all business logic including authentication, meal management, order processing, and role-based access control. Data is persisted in a **PostgreSQL** database via **Prisma ORM**.
 
-## Installation
-1. Clone repository:
-   ```bash
-   git clone https://github.com/plabon2024/foodhub-backend.git
-   cd foodhub-backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Ensure Prisma schema is generated (runs automatically on postinstall):
-   ```bash
-   npm run build
-   ```
-4. Set database connection in `.env`:
-   - `DATABASE_URL` (PostgreSQL connection string)
+---
 
-## Usage
-Start in development (uses `tsx` watch mode):
+## 📁 Folder Structure
+
+```
+backend/
+├── api/
+│   └── server.js               # Compiled serverless entry point (Vercel)
+├── prisma/
+│   ├── migrations/             # Database migration history
+│   └── schema.prisma           # Prisma data model definitions
+├── src/
+│   ├── config/
+│   │   └── index.ts            # Environment variable loader & exports
+│   ├── emails/                 # Email templates (e.g., verification, notifications)
+│   ├── generated/
+│   │   └── prisma/             # Auto-generated Prisma client
+│   ├── lib/
+│   │   ├── auth.ts             # Better Auth instance configuration
+│   │   ├── checkAuth.ts        # Role-based auth middleware
+│   │   └── prisma.ts           # Prisma client singleton
+│   ├── modules/
+│   │   ├── admin/              # Admin user & category management
+│   │   ├── auth/               # Authentication (register, login, tokens)
+│   │   ├── category/           # Meal category CRUD
+│   │   ├── meals/              # Meal listing & management
+│   │   ├── orders/             # Order creation & status tracking
+│   │   └── provider/           # Provider profile & application management
+│   ├── types/                  # Shared TypeScript interfaces
+│   ├── utils/                  # Helper utilities
+│   ├── app.ts                  # Express app setup, middleware & route mounting
+│   └── server.ts               # HTTP server entry point
+├── .env                        # Environment variables (not committed)
+├── .gitignore
+├── package.json
+├── prisma.config.ts            # Prisma configuration file
+├── tsconfig.json
+└── vercel.json                 # Vercel deployment configuration
+```
+
+---
+
+## 🗄️ Database Schema
+
+The PostgreSQL database is managed via **Prisma**. Key models are:
+
+| Model                    | Description                                               |
+|--------------------------|-----------------------------------------------------------|
+| `User`                   | Core user with roles (`CUSTOMER`, `PROVIDER`, `ADMIN`)    |
+| `Session` / `Account`    | Better Auth session & OAuth account records               |
+| `ProviderProfile`        | Extended profile for food providers                       |
+| `ProviderApplication`    | Customer-to-provider upgrade requests                     |
+| `Category`               | Meal categories (e.g., Rice, Snacks)                      |
+| `Meal`                   | Food items listed by a provider                           |
+| `Order`                  | Customer orders linked to a provider                      |
+| `OrderItem`              | Individual line items within an order                     |
+| `Review`                 | Per-meal customer reviews with star ratings (1–5)         |
+
+### Enums
+
+| Enum                        | Values                                        |
+|-----------------------------|-----------------------------------------------|
+| `Role`                      | `CUSTOMER`, `PROVIDER`, `ADMIN`               |
+| `UserStatus`                | `ACTIVE`, `SUSPENDED`                         |
+| `OrderStatus`               | `PLACED`, `PREPARING`, `READY`, `DELIVERED`, `CANCELLED` |
+| `ProviderApplicationStatus` | `PENDING`, `APPROVED`, `REJECTED`             |
+
+---
+
+## 🔑 Key Files & Their Purposes
+
+| File                          | Purpose                                                                |
+|-------------------------------|------------------------------------------------------------------------|
+| `src/app.ts`                  | Configures Express app: CORS, cookie parser, middleware, all routes    |
+| `src/server.ts`               | Starts the HTTP server on the configured port                          |
+| `src/config/index.ts`         | Loads and exports all environment variables with type safety           |
+| `src/lib/prisma.ts`           | Exports a singleton Prisma client to avoid connection pool exhaustion  |
+| `src/lib/auth.ts`             | Sets up the Better Auth instance (JWT, Google OAuth, sessions)         |
+| `src/lib/checkAuth.ts`        | Express middleware to verify JWT and enforce role-based access control |
+| `prisma/schema.prisma`        | Single source of truth for all database models and relationships       |
+| `vercel.json`                 | Routes all traffic to the compiled `api/server.js` for serverless deployment |
+
+### Module Structure (per feature)
+
+Each feature module under `src/modules/` follows this convention:
+
+```
+<feature>/
+├── <feature>.controller.ts   # Request handlers (thin layer, calls service)
+├── <feature>.service.ts      # Business logic & Prisma queries
+└── <feature>.routes.ts       # Express router with route definitions
+```
+
+---
+
+## 🌐 API Routes
+
+| Method   | Route                             | Access              | Description                          |
+|----------|-----------------------------------|---------------------|--------------------------------------|
+| `POST`   | `/api/v1/auth/register`           | Public              | Register a new user                  |
+| `POST`   | `/api/v1/auth/login`              | Public              | Login and receive JWT tokens         |
+| `POST`   | `/api/v1/auth/logout`             | Auth                | Logout and clear cookies             |
+| `GET`    | `/api/v1/auth/me`                 | Auth                | Get current authenticated user      |
+| `POST`   | `/api/v1/auth/refresh-token`      | Auth                | Refresh access token                 |
+| `GET`    | `/api/v1/meals`                   | Public              | List all available meals             |
+| `GET`    | `/api/v1/meals/:id`               | Public              | Get a single meal by ID              |
+| `POST`   | `/api/v1/provider/meals`          | Provider            | Create a new meal listing            |
+| `PATCH`  | `/api/v1/provider/meals/:id`      | Provider            | Update a meal                        |
+| `DELETE` | `/api/v1/provider/meals/:id`      | Provider            | Delete a meal                        |
+| `POST`   | `/api/v1/provider/apply`          | Customer            | Apply to become a provider           |
+| `GET`    | `/api/v1/orders`                  | Customer / Provider | Get orders for the current user      |
+| `POST`   | `/api/v1/orders`                  | Customer            | Place a new order                    |
+| `PATCH`  | `/api/v1/orders/:id/status`       | Provider            | Update order status                  |
+| `GET`    | `/api/v1/admin/users`             | Admin               | List all users                       |
+| `PATCH`  | `/api/v1/admin/users/:id/status`  | Admin               | Suspend or activate a user           |
+| `GET`    | `/api/v1/admin/categories`        | Admin               | List all categories                  |
+| `POST`   | `/api/v1/admin/categories`        | Admin               | Create a new category                |
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the `backend/` directory:
+
+```env
+NODE_ENV=development
+PORT=5000
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/foodhub
+
+# Better Auth
+BETTER_AUTH_SECRET=your_better_auth_secret
+BETTER_AUTH_URL=http://localhost:5000
+
+# JWT
+ACCESS_TOKEN_SECRET=your_access_token_secret
+REFRESH_TOKEN_SECRET=your_refresh_token_secret
+ACCESS_TOKEN_EXPIRES_IN=15m
+REFRESH_TOKEN_EXPIRES_IN=7d
+
+# CORS (optional — production frontend URL)
+APP_URL=https://your-frontend.vercel.app
+
+# Email (Nodemailer)
+MAIL_USER=your_email@gmail.com
+MAIL_PASS=your_email_app_password
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
+
+---
+
+## 🛠️ Setup & Installation
+
+### Prerequisites
+
+- Node.js v20+
+- npm v10+
+- A running PostgreSQL database
+
+### Steps
+
 ```bash
+# 1. Navigate to the backend directory
+cd backend
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment variables
+# Create a .env file and fill in the values above
+
+# 4. Run Prisma migrations to set up the database schema
+npx prisma migrate dev
+
+# 5. Generate the Prisma client
+npx prisma generate
+
+# 6. Start the development server
 npm run dev
 ```
 
-Or start the server in runtime mode:
-```bash
-npm start
+---
+
+## 📜 Available Scripts
+
+| Script          | Description                                                                     |
+|-----------------|---------------------------------------------------------------------------------|
+| `npm run dev`   | Starts the dev server with `tsx watch` (hot reload)                             |
+| `npm run start` | Alias for `npm run dev`                                                          |
+| `npm run build` | Generates Prisma client and bundles the app with `tsup` for Vercel deployment   |
+
+---
+
+## 🚀 Deployment
+
+The backend is configured for **serverless deployment on Vercel**.
+
+```json
+// vercel.json — rewrites all routes to the compiled handler
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/server" }]
+}
 ```
 
-Build distributable JS:
-```bash
-npm run build
-```
-
-Default server listens on `PORT` env or `5000`.
-
-## Configuration
-Environment variables:
-- `DATABASE_URL`: Prisma database connection string (PostgreSQL).
-- `PORT`: optional HTTP server port (default 5000).
-- `BETTER_AUTH_SECRET`: secret key for better-auth session encryption.
-- `BETTER_AUTH_URL`: authentication service URL (e.g. `http://localhost:5000`).
-- `APP_URL`: frontend application URL (e.g. `http://localhost:3000`).
-- `MAIL_USER`, `MAIL_PASS`: SMTP credentials for email sending.
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: Google oauth credentials (if used).
-
-CORS origins allowed by default:
-- `http://localhost:3000`
-- `https://foodhub-frontend-sepia.vercel.app`
-
-## API
-Base path: `/api`
-
-### Auth
-- `GET /api/auth/me` - get current authenticated user
-- `PATCH /api/auth/profile` - update current user profile
-
-### Public Meal and Provider Routes
-- `GET /api/meals` - list available meals
-- `GET /api/meals/:id` - meal details
-- `GET /api/providers` - list providers
-- `GET /api/providers/:id` - provider with menu
-- `GET /api/stats` - app statistics
-- `GET /api/categories` - list categories
-
-### Orders (requires authenticated user context)
-- `POST /api/orders` - create order
-- `GET /api/orders` - list current user's orders
-- `GET /api/orders/:id` - order details
-
-### Provider (provider-level) Routes
-- `POST /api/provider/meals` - create meal
-- `PUT /api/provider/meals/:id` - update meal
-- `DELETE /api/provider/meals/:id` - delete meal
-- `PATCH /api/provider/orders/:id` - update order status
-- `POST /api/provider/apply` - apply for provider role
-
-### Admin Routes
-- `GET /api/admin/users` - list users
-- `PATCH /api/admin/users/:id` - update user status
-- `GET /api/admin/provider-applications` - list provider applications
-- `POST /api/admin/provider-applications/:applicationId/approve` - approve provider application
-- `POST /api/admin/categories` - create category
-- `PUT /api/admin/categories/:id` - update category
-- `DELETE /api/admin/categories/:id` - delete category
-
+The `npm run build` command compiles `src/server.ts` into `api/server.js` using `tsup`.
