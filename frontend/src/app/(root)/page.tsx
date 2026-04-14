@@ -13,7 +13,6 @@ import AboutUsSection from "@/components/shared/Hero/AboutSection";
 export default function HomePage() {
   return (
     <div>
-
       <HeroSection />
 
       <HowItWorksSection />
@@ -22,7 +21,6 @@ export default function HomePage() {
       <CategoriesSection />
 
       <CheckoutOurMenuSection />
-
 
       <WhyChooseUsSection />
 
