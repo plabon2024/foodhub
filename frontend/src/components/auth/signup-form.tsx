@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
+import { persistAuthTokens } from "@/actions/auth.action";
 
 /* ----------------------------- API CALL ----------------------------- */
 
@@ -60,7 +61,12 @@ export function SignupForm({
 
   const mutation = useMutation({
     mutationFn: signup,
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // Persist tokens on the frontend domain so Next.js server-side can read them.
+      const { accessToken, refreshToken } = data?.data ?? {};
+      const sessionToken = data?.data?.token;
+      await persistAuthTokens({ accessToken, refreshToken, sessionToken });
+
       toast.success("Registration successful! Welcome to FoodHub.");
       setTimeout(() => {
         window.location.href = "/";

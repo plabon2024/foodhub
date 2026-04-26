@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/lib/user-context";
 import { cn } from "@/lib/utils";
+import { persistAuthTokens } from "@/actions/auth.action";
 import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -71,6 +72,12 @@ export function LoginForm({
         toast.error(msg);
         return;
       }
+
+      // Persist tokens on the frontend domain so Next.js server can read them.
+      // The backend sets cookies on its own domain; we must also save to frontend domain.
+      const { accessToken, refreshToken } = data?.data ?? {};
+      const sessionToken = data?.data?.token;
+      await persistAuthTokens({ accessToken, refreshToken, sessionToken });
 
       toast.success("Login successful. Good to have you back.");
       await refetch();
