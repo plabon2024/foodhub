@@ -2,11 +2,8 @@
 
 import { setTokenInCookies } from "@/lib/jwtUtils";
 
-/**
- * Called after a successful login/register API response.
- * Stores accessToken, refreshToken, and better-auth session token
- * as cookies on the FRONTEND domain so the Next.js server can read them.
- */
+import { clearAuthCookies } from "@/services/auth.services";
+
 export async function persistAuthTokens(tokens: {
   accessToken?: string;
   refreshToken?: string;
@@ -26,3 +23,13 @@ export async function persistAuthTokens(tokens: {
     );
   }
 }
+
+import { revalidatePath } from "next/cache";
+export async function logout() {
+  await clearAuthCookies();
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+
+

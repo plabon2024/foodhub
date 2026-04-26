@@ -62,7 +62,9 @@ export async function getUserInfo() {
         'Content-Type': 'application/json',
         Cookie: `accessToken=${accessToken}; better-auth.session_token=${sessionToken}`,
       },
+      cache: 'no-store',
     });
+
 
     if (!res.ok) {
       console.error('Failed to fetch user info:', res.status, res.statusText);
@@ -84,13 +86,25 @@ export async function getUserInfo() {
 export async function clearAuthCookies() {
   try {
     const cookieStore = await cookies();
-    cookieStore.delete('accessToken');
-    cookieStore.delete('refreshToken');
-    cookieStore.delete('better-auth.session_token');
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    const options = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      path: '/',
+      maxAge: 0,
+    };
+
+    cookieStore.set('accessToken', '', options);
+    cookieStore.set('refreshToken', '', options);
+    cookieStore.set('better-auth.session_token', '', options);
+    
     return true;
   } catch (error) {
     console.error('Error clearing auth cookies:', error);
     return false;
   }
 }
+
 

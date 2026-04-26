@@ -8,6 +8,8 @@ import { toast } from "sonner";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+import { logout } from "@/actions/auth.action";
+
 export const SignOutButton = () => {
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
@@ -16,17 +18,21 @@ export const SignOutButton = () => {
   async function handleClick() {
     setIsPending(true);
     try {
-      await fetch(`${BASE_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      try {
+        await fetch(`${BASE_URL}/auth/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (err) {
+        console.error("Backend logout fetch failed:", err);
+      }
+      await logout();
 
-      await refetch();
       toast.success("You've logged out. See you soon!");
-      router.push("/login");
-    } catch {
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
       toast.error("Logout failed. Please try again.");
-    } finally {
       setIsPending(false);
     }
   }
