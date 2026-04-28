@@ -81,7 +81,3 @@ The frontend will be available at `http://localhost:3000` and the backend API at
 - [Frontend Documentation](./frontend/README.md)
 
 ---
-
-## 📝 License
-
-This project is developed as part of an academic assignment (B6A4).
